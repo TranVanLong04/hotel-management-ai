@@ -1,0 +1,28 @@
+{
+  "name": "hotel-management-ai",
+  "version": "1.0.0",
+  "description": "Website quản lý khách sạn tích hợp AI nhận diện khuôn mặt",
+  "private": true,
+  "author": "Trần Văn Long <2251220175@st.hau.edu.vn>",
+  "license": "UNLICENSED",
+  "scripts": {
+    "be:dev": "cd source/backend && pnpm dev",
+    "be:start": "cd source/backend && pnpm start",
+    "be:test": "cd source/backend && pnpm test",
+    "fe:dev": "cd source/frontend && pnpm dev",
+    "fe:build": "cd source/frontend && pnpm build",
+    "fe:test": "cd source/frontend && pnpm test",
+    "ai:dev": "cd source/ai-service && uvicorn app.main:app --reload --port 8000",
+    "ai:test": "cd source/ai-service && pytest",
+    "install:all": "cd source/backend && pnpm install && cd ../frontend && pnpm install",
+    "dev": "concurrently \"pnpm be:dev\" \"pnpm fe:dev\" \"pnpm ai:dev\"",
+    "clean": "rm -rf source/backend/node_modules source/frontend/node_modules source/backend/dist source/frontend/dist"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=8.0.0"
+  }
+}

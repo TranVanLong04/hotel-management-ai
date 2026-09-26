@@ -1,0 +1,102 @@
+# Error Codes
+
+Format: `<DOMAIN>_<SPECIFIC>` (UPPER_SNAKE_CASE)
+
+## Auth
+| Code | HTTP | Message |
+|------|:----:|---------|
+| AUTH_INVALID_CREDENTIALS | 401 | Email hoặc mật khẩu không đúng |
+| AUTH_ACCOUNT_DISABLED | 403 | Tài khoản đã bị khóa |
+| AUTH_EMAIL_EXISTS | 409 | Email đã được sử dụng |
+| AUTH_USERNAME_EXISTS | 409 | Tên đăng nhập đã tồn tại |
+| AUTH_TOKEN_EXPIRED | 401 | Phiên đăng nhập đã hết hạn |
+| AUTH_TOKEN_INVALID | 401 | Token không hợp lệ |
+
+## Authorization
+- `FORBIDDEN` (403) — Không có quyền
+- `INSUFFICIENT_ROLE` (403) — Vai trò không đủ quyền
+- `RESOURCE_NOT_OWNED` (403) — Không sở hữu tài nguyên
+
+## Validation
+- `VALIDATION_ERROR` (400)
+- `MISSING_FIELD` (400)
+- `INVALID_DATE_RANGE` (400)
+
+## Customer
+- `CUSTOMER_NOT_FOUND` (404)
+- `CUSTOMER_IDENTITY_EXISTS` (409) — CCCD trùng
+
+## User
+- `USER_NOT_FOUND` (404)
+- `USER_NOT_ACTIVE` (403)
+
+## Room Type
+- `ROOM_TYPE_NOT_FOUND` (404)
+- `ROOM_TYPE_NAME_EXISTS` (409)
+- `ROOM_TYPE_IN_USE` (409) — Còn phòng dùng loại này
+
+## Room
+- `ROOM_NOT_FOUND` (404)
+- `ROOM_NUMBER_EXISTS` (409)
+- `ROOM_NOT_AVAILABLE` (409)
+- `ROOM_HAS_ACTIVE_BOOKING` (409)
+
+## Booking
+- `BOOKING_NOT_FOUND` (404)
+- `BOOKING_OVERLAP` (409) — Trùng lịch
+- `BOOKING_INVALID_DATES` (400)
+- `BOOKING_PAST_DATE` (400)
+- `BOOKING_ALREADY_CHECKED_IN` (409)
+- `BOOKING_NOT_CHECKED_IN` (409)
+- `BOOKING_ALREADY_CHECKED_OUT` (409)
+- `BOOKING_CANNOT_CANCEL` (409)
+- `BOOKING_GUESTS_EXCEED` (400)
+
+## Face
+- `FACE_PROFILE_NOT_FOUND` (404)
+- `FACE_NOT_DETECTED` (400)
+- `FACE_MULTIPLE_DETECTED` (400)
+- `FACE_LOW_QUALITY` (400)
+- `FACE_VERIFICATION_FAILED` (400)
+- `FACE_UPLOAD_FAILED` (500)
+- `FACE_ALREADY_REGISTERED` (409)
+
+## AI Service
+- `AI_SERVICE_UNAVAILABLE` (503)
+- `AI_SERVICE_TIMEOUT` (504)
+- `AI_INVALID_EMBEDDING` (400)
+
+## Service
+- `SERVICE_NOT_FOUND` (404)
+- `SERVICE_NAME_EXISTS` (409)
+- `SERVICE_NOT_ACTIVE` (409)
+
+## Invoice
+- `INVOICE_NOT_FOUND` (404)
+- `INVOICE_ALREADY_EXISTS` (409)
+- `INVOICE_ALREADY_PAID` (409)
+- `INVOICE_NOT_PAID` (409)
+
+## Payment
+- `PAYMENT_NOT_FOUND` (404)
+- `PAYMENT_AMOUNT_INVALID` (400)
+- `PAYMENT_EXCEEDS_INVOICE` (400)
+- `PAYMENT_REFUND_EXCEEDS` (400)
+
+## Generic
+- `BAD_REQUEST` (400)
+- `UNAUTHORIZED` (401)
+- `FORBIDDEN` (403)
+- `NOT_FOUND` (404)
+- `CONFLICT` (409)
+- `INTERNAL_ERROR` (500)
+- `SERVICE_UNAVAILABLE` (503)
+
+## PostgreSQL → AppError mapping
+| PG | Ý nghĩa | AppError |
+|----|---------|----------|
+| 23505 | UNIQUE violation | CONFLICT (409) |
+| 23503 | FK violation | BAD_REQUEST (400) |
+| 23502 | NOT NULL | VALIDATION_ERROR (400) |
+| 23514 | CHECK fail | VALIDATION_ERROR (400) |
+| 23P01 | Exclusion (overlap) | BOOKING_OVERLAP (409) |
