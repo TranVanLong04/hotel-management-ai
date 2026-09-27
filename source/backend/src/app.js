@@ -43,8 +43,10 @@ app.get('/health', (req, res) => {
   });
 });
 
-// === Mount routes — placeholder cho các phase sau ===
-// VD: app.use('/api/auth', authRoutes);
+// === Mount routes ===
+import authRoutes from './modules/auth/auth.routes.js';
+
+app.use('/api/auth', authRoutes);
 
 // === 404 handler — phải đặt sau tất cả routes ===
 app.use(notFoundHandler);
