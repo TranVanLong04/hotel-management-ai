@@ -29,7 +29,16 @@ export const validate = (schema) => (req, res, next) => {
       errors.push(...fieldErrors);
     } else {
       // Replace bằng data đã validate (strip unknown fields)
-      req[source] = result.data;
+      // Express 5: req.query là read-only getter → dùng Object.defineProperty
+      if (source === 'query') {
+        Object.defineProperty(req, 'query', {
+          value: result.data,
+          writable: true,
+          configurable: true,
+        });
+      } else {
+        req[source] = result.data;
+      }
     }
   }
 

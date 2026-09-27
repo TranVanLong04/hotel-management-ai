@@ -45,8 +45,12 @@ app.get('/health', (req, res) => {
 
 // === Mount routes ===
 import authRoutes from './modules/auth/auth.routes.js';
+import usersRoutes from './modules/users/users.routes.js';
+import customersRoutes from './modules/customers/customers.routes.js';
 
 app.use('/api/auth', authRoutes);
+app.use('/api/users', usersRoutes);
+app.use('/api/customers', customersRoutes);
 
 // === 404 handler — phải đặt sau tất cả routes ===
 app.use(notFoundHandler);
