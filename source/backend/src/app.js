@@ -56,6 +56,7 @@ import checkoutRoutes from './modules/checkout/checkout.routes.js';
 import servicesRoutes from './modules/services/services.routes.js';
 import serviceUsagesRoutes from './modules/service-usages/service-usages.routes.js';
 import invoicesRoutes from './modules/invoices/invoices.routes.js';
+import reportsRoutes from './modules/reports/reports.routes.js';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);
@@ -69,6 +70,7 @@ app.use('/api/checkout', checkoutRoutes);
 app.use('/api/services', servicesRoutes);
 app.use('/api/service-usages', serviceUsagesRoutes);
 app.use('/api/invoices', invoicesRoutes);
+app.use('/api/reports', reportsRoutes);
 
 // === 404 handler — phải đặt sau tất cả routes ===
 app.use(notFoundHandler);
