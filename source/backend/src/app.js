@@ -51,6 +51,8 @@ import roomTypesRoutes from './modules/room-types/room-types.routes.js';
 import roomsRoutes from './modules/rooms/rooms.routes.js';
 import bookingsRoutes from './modules/bookings/bookings.routes.js';
 import facesRoutes from './modules/face-profiles/faces.routes.js';
+import checkinRoutes from './modules/checkin/checkin.routes.js';
+import checkoutRoutes from './modules/checkout/checkout.routes.js';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);
@@ -59,6 +61,8 @@ app.use('/api/room-types', roomTypesRoutes);
 app.use('/api/rooms', roomsRoutes);
 app.use('/api/bookings', bookingsRoutes);
 app.use('/api/faces', facesRoutes);
+app.use('/api/checkin', checkinRoutes);
+app.use('/api/checkout', checkoutRoutes);
 
 // === 404 handler — phải đặt sau tất cả routes ===
 app.use(notFoundHandler);

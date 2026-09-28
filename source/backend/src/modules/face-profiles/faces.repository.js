@@ -30,6 +30,27 @@ export const findActiveByCustomerId = async (customerId) => {
 };
 
 /**
+ * Tìm hồ sơ khuôn mặt kèm face_embedding (chỉ sử dụng nội bộ BE để so khớp AI, KHÔNG trả về client).
+ * @param {string} customerId - UUID
+ * @returns {Promise<Object|null>}
+ */
+export const findActiveWithEmbeddingByCustomerId = async (customerId) => {
+  const { data, error } = await supabaseAdmin
+    .from('face_profiles')
+    .select('id, customer_id, face_image_url, face_embedding, model_version, is_active, created_at, updated_at')
+    .eq('customer_id', customerId)
+    .eq('is_active', true)
+    .maybeSingle();
+
+  if (error) {
+    logger.error({ err: error, customerId }, 'FacesRepository: findActiveWithEmbeddingByCustomerId failed');
+    throw new InternalError('Lỗi truy vấn hồ sơ khuôn mặt');
+  }
+
+  return data;
+};
+
+/**
  * Lấy danh sách tất cả hồ sơ khuôn mặt của khách hàng (sắp xếp mới nhất trước).
  * @param {string} customerId - UUID
  * @returns {Promise<Object[]>}
