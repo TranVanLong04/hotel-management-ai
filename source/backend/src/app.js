@@ -53,6 +53,9 @@ import bookingsRoutes from './modules/bookings/bookings.routes.js';
 import facesRoutes from './modules/face-profiles/faces.routes.js';
 import checkinRoutes from './modules/checkin/checkin.routes.js';
 import checkoutRoutes from './modules/checkout/checkout.routes.js';
+import servicesRoutes from './modules/services/services.routes.js';
+import serviceUsagesRoutes from './modules/service-usages/service-usages.routes.js';
+import invoicesRoutes from './modules/invoices/invoices.routes.js';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);
@@ -63,6 +66,9 @@ app.use('/api/bookings', bookingsRoutes);
 app.use('/api/faces', facesRoutes);
 app.use('/api/checkin', checkinRoutes);
 app.use('/api/checkout', checkoutRoutes);
+app.use('/api/services', servicesRoutes);
+app.use('/api/service-usages', serviceUsagesRoutes);
+app.use('/api/invoices', invoicesRoutes);
 
 // === 404 handler — phải đặt sau tất cả routes ===
 app.use(notFoundHandler);
