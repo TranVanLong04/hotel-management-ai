@@ -9,6 +9,8 @@ import { RegisterPage } from '@/features/auth/pages/RegisterPage';
 import { HomePage } from '@/pages/HomePage';
 import { RoomListPage } from '@/features/room/pages/RoomListPage';
 import { RoomDetailPage } from '@/features/room/pages/RoomDetailPage';
+import { BookingPage } from '@/features/booking/pages/BookingPage';
+import { MyBookingsPage } from '@/features/booking/pages/MyBookingsPage';
 import { AdminDashboardPage } from '@/pages/AdminDashboardPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { ForbiddenPage } from '@/pages/ForbiddenPage';
@@ -45,9 +47,15 @@ export const router = createBrowserRouter([
       {
         element: <ProtectedRoute />,
         children: [
+          // Đặt phòng (Phase 5)
+          {
+            path: PATHS.BOOKING,
+            element: <BookingPage />,
+          },
+          // Danh sách đặt phòng cá nhân (Phase 5)
           {
             path: PATHS.MY_BOOKINGS,
-            element: <HomePage />,
+            element: <MyBookingsPage />,
           },
           {
             path: PATHS.MY_PROFILE,

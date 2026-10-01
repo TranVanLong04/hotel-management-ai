@@ -122,6 +122,24 @@ export interface Booking {
   updated_at: string;
   customer?: Customer;
   room?: Room;
+  rooms?: {
+    id: string;
+    room_number: string;
+    floor: number | null;
+    room_types?: {
+      id: string;
+      name: string;
+      base_price?: number;
+      max_guests?: number;
+    };
+  };
+  customers?: {
+    id: string;
+    user_id?: string;
+    full_name: string;
+    phone: string;
+    identity_number?: string | null;
+  };
 }
 
 /** Dịch vụ khách sạn — price là giá hiện tại */
@@ -307,5 +325,21 @@ export interface RegisterPayload {
 export interface AuthResponse {
   user: User;
   token: string;
+}
+
+// ========== BOOKING PAYLOADS ==========
+
+/** Payload tạo booking mới */
+export interface CreateBookingPayload {
+  room_id: string;
+  check_in_date: string;
+  check_out_date: string;
+  number_of_guests: number;
+  note?: string;
+}
+
+/** Payload hủy booking */
+export interface CancelBookingPayload {
+  reason?: string;
 }
 
