@@ -286,3 +286,26 @@ export const ROOM_STATUS_COLORS: Record<RoomStatus, string> = {
   cleaning: 'warning',
   maintenance: 'default',
 };
+
+// ========== AUTH PAYLOADS & RESPONSES ==========
+
+/** Payload gửi lên khi đăng nhập */
+export interface LoginPayload {
+  email: string;
+  password: string;
+}
+
+/** Payload gửi lên khi đăng ký */
+export interface RegisterPayload {
+  email: string;
+  password: string;
+  full_name: string;
+  phone: string;
+}
+
+/** Dữ liệu trả về khi đăng nhập / đăng ký thành công */
+export interface AuthResponse {
+  user: User;
+  token: string;
+}
+
