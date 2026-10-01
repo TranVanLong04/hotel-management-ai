@@ -7,6 +7,8 @@ import { RoleRoute } from './RoleRoute';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
 import { RegisterPage } from '@/features/auth/pages/RegisterPage';
 import { HomePage } from '@/pages/HomePage';
+import { RoomListPage } from '@/features/room/pages/RoomListPage';
+import { RoomDetailPage } from '@/features/room/pages/RoomDetailPage';
 import { AdminDashboardPage } from '@/pages/AdminDashboardPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { ForbiddenPage } from '@/pages/ForbiddenPage';
@@ -14,7 +16,7 @@ import { PATHS } from './paths';
 
 /**
  * Cấu hình toàn bộ hệ thống Routes của ứng dụng
- * - MainLayout: Dành cho các trang công khai & khách hàng (Home, Rooms, Bookings, Profile)
+ * - MainLayout: Dành cho các trang công khai & khách hàng (Home, Rooms, RoomDetail, Bookings, Profile)
  * - AdminLayout: Dành cho trang quản trị & lễ tân (Staff, Admin)
  * - PublicRoute: Chặn user đã login vào các trang auth (Login, Register)
  * - RoleRoute & ProtectedRoute: Bảo vệ các trang nhạy cảm theo phân quyền
@@ -29,10 +31,15 @@ export const router = createBrowserRouter([
         index: true,
         element: <HomePage />,
       },
-      // Trang danh sách phòng (placeholder)
+      // Danh sách phòng nghỉ (Phase 4)
       {
         path: PATHS.ROOMS,
-        element: <HomePage />,
+        element: <RoomListPage />,
+      },
+      // Chi tiết phòng nghỉ (Phase 4)
+      {
+        path: PATHS.ROOM_DETAIL,
+        element: <RoomDetailPage />,
       },
       // Các trang yêu cầu khách hàng đăng nhập
       {
