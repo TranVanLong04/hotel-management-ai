@@ -1,78 +1,110 @@
-# Phase 8: Checkout
+# Phase 7: Check-in AI
 
 ## Mục tiêu
-Trang check-out cho lễ tân: xem breakdown, thêm payments, tạo hóa đơn.
+**Trang quan trọng nhất của đồ án** — Lễ tân check-in bằng AI nhận diện khuôn mặt.
 
 ## Files cần tạo
 
 ```
-src/api/checkout.api.ts
-src/api/serviceUsage.api.ts
+src/api/checkin.api.ts
 
-src/features/checkout/
+src/features/checkin/
 ├── components/
-│   ├── InvoicePreview.tsx
-│   ├── PaymentForm.tsx
-│   └── PaymentList.tsx
+│   ├── BookingSearch.tsx
+│   ├── BookingInfoCard.tsx
+│   ├── FaceVerifyCamera.tsx
+│   ├── VerificationResult.tsx
+│   └── ManualCheckinForm.tsx
+├── hooks/
+│   └── useCheckin.ts
 └── pages/
-    └── CheckoutPage.tsx
+    └── CheckinPage.tsx
 ```
 
 ## Chi tiết
 
-### `checkout.api.ts`
-- `checkout(bookingId, data)` — POST /checkout/:id
+### `checkin.api.ts`
+- `verify(bookingId, file)` — POST /checkin/:id/verify (multipart)
+- `confirm(bookingId)` — POST /checkin/:id/confirm
+- `manual(bookingId, data)` — POST /checkin/:id/manual
 
-### `serviceUsage.api.ts`
-- `listByBooking(bookingId)` — GET /bookings/:id/services
-- `add(bookingId, data)` — POST
-- `remove(id)` — DELETE
+### `useCheckin.ts`
+State: `verifying`, `attempts: number`
+- `verify(bookingId, blob)`:
+  - Set verifying true
+  - Gọi API, catch error
+  - Nếu success → reset attempts, return `{ success: true, data }`
+  - Nếu fail → tăng attempts, return `{ success: false, code, message, attempts, canRetry: attempts < 3 }`
+- `reset()` — reset attempts
+- MAX_ATTEMPTS = 3
 
-### `CheckoutPage.tsx`
+### `CheckinPage.tsx`
+State: `booking`, `result`, `showManual`
 Flow:
-1. Nhập mã booking → tìm booking `checked_in`
-2. `<BookingInfoCard />` + `<InvoicePreview />` + `<PaymentForm />`
-3. Sau khi submit → success screen
+1. Nếu chưa có booking → hiển thị `<BookingSearch />`
+2. Nếu có booking + chưa có result → `<BookingInfoCard />` + `<FaceVerifyCamera />`
+   - Nếu customer chưa có face_profile → hiển thị alert + nút "Check-in thủ công"
+3. Nếu fail → `<VerificationResult />` với retry button (nếu còn lượt) hoặc manual button
+4. Nếu success → `<VerificationResult />` success + nút reset
+5. Nếu `showManual` → `<ManualCheckinForm />`
 
-Reuse `BookingSearch` từ phase7 (đã validate state).
+### `BookingSearch.tsx`
+- Form nhập mã booking
+- Gọi `bookingApi.list({ search: code, limit: 1 })`
+- Validate:
+  - Không tìm thấy → toast
+  - `status === 'checked_in'` → toast "Đã check-in"
+  - `status === 'checked_out'` → toast "Đã check-out"
+  - `status !== 'confirmed'` → toast "Chưa thể check-in"
+- Nếu OK → `onFound(booking)`
 
-### `InvoicePreview.tsx`
-Props: `{ booking, taxRate = 0.08, discountAmount = 0, onCalculated }`
-- Fetch service usages của booking
-- Tính:
-  - `roomAmount = booking.room_subtotal`
-  - `serviceAmount = SUM(service_usages.total_amount)`
-  - `subtotal = roomAmount + serviceAmount - discountAmount`
-  - `taxAmount = subtotal × taxRate`
-  - `totalAmount = subtotal + taxAmount`
-- Hiển thị breakdown line-by-line
-- Gọi `onCalculated({ room_amount, service_amount, tax_amount, total_amount })` để parent biết total
+### `BookingInfoCard.tsx`
+- Hiển thị: booking_code, customer name + phone, room, dates, guests, total
+- Badge face_verification_status với variant tương ứng
+- Layout 2 cột info grid
 
-### `PaymentForm.tsx`
-- Nhận `totalAmount` từ parent
-- State: `payments: Array<{ amount, method, transaction_code }>`
-- Cho phép thêm nhiều payment rows
-- Mỗi row: amount + method (select) + transaction_code (optional)
-- Hiển thị "Còn lại: X ₫" real-time
-- Validate: tổng payments = totalAmount
-- Submit → `checkoutApi.checkout(bookingId, { discount_amount, tax_rate, payments })`
+### `FaceVerifyCamera.tsx`
+- Wrap `useCamera` từ phase6
+- Hiển thị số attempts hiện tại
+- Nếu `attempts > 0` → warning banner
+- Callback `onVerify({ blob, dataURL })`
 
-### `PaymentList.tsx`
-- Hiển thị danh sách payments đã thêm
-- Nút xóa từng payment
+### `VerificationResult.tsx`
+Props: `{ result, onReset, onManual }`
+
+Success case:
+- Icon CheckCircle2 xanh lớn
+- Tiêu đề "Check-in thành công!"
+- Similarity %
+- Card info booking (code, name, room, time)
+- Nút "Check-in khách tiếp theo" → `onReset`
+
+Fail case:
+- Icon XCircle đỏ
+- Message lỗi
+- Similarity nếu có
+- Nếu `canRetry` → nút "Thử lại (X/3)"
+- Nếu hết lượt → info + nút "Check-in thủ công" → `onManual`
+
+### `ManualCheckinForm.tsx`
+- Warning banner vàng "Security event"
+- Form: identity_number (9-12 số), reason (min 10 chars)
+- Submit → `checkinApi.manual()` → onSuccess
 
 ## Test
-- Tìm booking checked_in
-- Invoice breakdown tính đúng
-- Thêm/xóa payment
-- Validate tổng = total
-- Submit → success
-- Booking chưa checked_in → không cho tìm
+- Search booking OK
+- Search không tồn tại → toast
+- Verify thành công → success screen
+- Verify fail 1-2 lần → retry button
+- Fail 3 lần → manual button
+- Manual checkin OK
+- Reset → về search
 
 ## Điều kiện hoàn thành
-- [ ] Tìm booking
-- [ ] Breakdown chính xác
-- [ ] Multiple payments
-- [ ] Validate tổng
-- [ ] Success screen
+- [ ] Search + validate booking state
+- [ ] Face verify flow đầy đủ
+- [ ] Attempt counter
+- [ ] Manual fallback sau 3 lần
+- [ ] Success screen với đầy đủ info
 - [ ] Dark mode
+- [ ] Responsive

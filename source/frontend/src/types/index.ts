@@ -374,4 +374,4 @@ export interface PaymentCallbackResult {
   nextStep?: 'face_register' | 'my_bookings';
   reason?: string;
 }
-
+export * from './face';
