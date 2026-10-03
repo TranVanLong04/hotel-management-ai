@@ -9,6 +9,7 @@ interface TabItem {
 
 const TABS: TabItem[] = [
   { value: 'all', label: 'Tất cả' },
+  { value: 'pending_payment', label: 'Chờ thanh toán' },
   { value: 'pending', label: 'Chờ xác nhận' },
   { value: 'confirmed', label: 'Đã xác nhận' },
   { value: 'checked_in', label: 'Đang ở' },

@@ -28,12 +28,22 @@ export const ROOM_STATUSES = Object.freeze({
 
 // === Booking Status ===
 export const BOOKING_STATUSES = Object.freeze({
+  PENDING_PAYMENT: 'pending_payment',
   PENDING: 'pending',
   CONFIRMED: 'confirmed',
   CHECKED_IN: 'checked_in',
   CHECKED_OUT: 'checked_out',
   CANCELLED: 'cancelled',
   NO_SHOW: 'no_show',
+});
+
+// === Payment Gateways (Cổng thanh toán) ===
+export const PAYMENT_GATEWAYS = Object.freeze({
+  MOMO: 'momo',
+  VNPAY: 'vnpay',
+  CASH: 'cash',
+  BANK_TRANSFER: 'bank_transfer',
+  OTHER: 'other',
 });
 
 // === Face Verification Status ===

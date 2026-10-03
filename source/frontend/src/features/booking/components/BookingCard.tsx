@@ -6,9 +6,9 @@ import {
   DoorOpen,
   ScanFace,
   XCircle,
-  Clock,
   Eye,
   FileText,
+  CreditCard,
 } from 'lucide-react';
 import { Card } from '@components/ui/Card';
 import { Badge } from '@components/ui/Badge';
@@ -28,7 +28,7 @@ interface BookingCardProps {
 
 /**
  * Thẻ hiển thị thông tin từng đơn đặt phòng của khách hàng
- * Bao gồm mã booking, thông tin phòng, ngày ở, giá tiền và các nút hành động (Hủy, Đăng ký mặt, Xem phòng)
+ * Bao gồm mã booking, thông tin phòng, ngày ở, giá tiền và các nút hành động (Thanh toán ngay, Đăng ký mặt, Xem phòng, Hủy)
  */
 export function BookingCard({ booking, onCancel }: BookingCardProps) {
   const roomNumber = booking.rooms?.room_number ?? booking.room?.room_number ?? '---';
@@ -46,8 +46,12 @@ export function BookingCard({ booking, onCancel }: BookingCardProps) {
     | 'danger'
     | 'info';
 
+  const isPendingPayment = booking.status === 'pending_payment';
+
   const isCancellable =
-    booking.status === 'pending' || booking.status === 'confirmed';
+    booking.status === 'pending_payment' ||
+    booking.status === 'pending' ||
+    booking.status === 'confirmed';
 
   // Tính tiền hiển thị: ưu tiên room_subtotal, fallback = room_price * number_of_nights
   const totalPrice =
@@ -55,15 +59,44 @@ export function BookingCard({ booking, onCancel }: BookingCardProps) {
       ? booking.room_subtotal
       : (booking.room_price ?? 0) * (booking.number_of_nights || 1);
 
+  // Subtitle giải thích trạng thái cho khách hàng
+  const getStatusSubtitle = () => {
+    switch (booking.status) {
+      case 'pending':
+        return 'Đơn đã thanh toán. Khách sạn sẽ xác nhận trong 15 phút.';
+      case 'confirmed':
+        return 'Sẵn sàng check-in. Vui lòng có mặt đúng giờ.';
+      case 'pending_payment':
+        return 'Vui lòng thanh toán để hoàn tất giữ phòng.';
+      case 'checked_in':
+        return 'Đang lưu trú tại khách sạn.';
+      case 'checked_out':
+        return 'Kỳ nghỉ đã hoàn thành.';
+      case 'cancelled':
+        return 'Đơn đặt phòng đã bị hủy.';
+      default:
+        return null;
+    }
+  };
+
+  const statusSubtitle = getStatusSubtitle();
+
   return (
     <Card className="overflow-hidden border border-gray-200 bg-white p-5 transition-all duration-200 hover:shadow-card-hover dark:border-gray-800 dark:bg-gray-850">
-      {/* Header: Mã đặt phòng + Badge Trạng thái */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 pb-3 dark:border-gray-800">
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-500 dark:text-gray-400">Mã đơn:</span>
-          <span className="font-mono text-sm font-bold text-gray-900 dark:text-white">
-            {booking.booking_code}
-          </span>
+      {/* Header: Mã đặt phòng + Subtitle + Badge Trạng thái */}
+      <div className="flex flex-wrap items-start justify-between gap-2 border-b border-gray-100 pb-3 dark:border-gray-800">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-500 dark:text-gray-400">Mã đơn:</span>
+            <span className="font-mono text-sm font-bold text-gray-900 dark:text-white">
+              {booking.booking_code}
+            </span>
+          </div>
+          {statusSubtitle && (
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 font-medium">
+              {statusSubtitle}
+            </p>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <Badge variant={statusVariant}>
@@ -131,7 +164,30 @@ export function BookingCard({ booking, onCancel }: BookingCardProps) {
 
       {/* Footer: Các nút hành động */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 pt-3 dark:border-gray-800">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Nút Thanh toán ngay (nếu đang chờ thanh toán) */}
+          {isPendingPayment && (
+            <Link to={PATHS.PAYMENT.replace(':bookingId', booking.id)}>
+              <Button
+                variant="primary"
+                size="sm"
+                type="button"
+                className="font-bold shadow-sm"
+              >
+                <CreditCard className="mr-1.5 h-3.5 w-3.5" />
+                Thanh toán ngay
+              </Button>
+            </Link>
+          )}
+
+          {/* Nút xem chi tiết tiến trình đơn */}
+          <Link to={PATHS.BOOKING_DETAIL.replace(':id', booking.id)}>
+            <Button variant="outline" size="sm" type="button">
+              <FileText className="mr-1.5 h-3.5 w-3.5" />
+              Chi tiết đơn
+            </Button>
+          </Link>
+
           {/* Nút xem chi tiết phòng */}
           {roomId && (
             <Link to={PATHS.ROOM_DETAIL.replace(':id', roomId)}>
@@ -142,18 +198,20 @@ export function BookingCard({ booking, onCancel }: BookingCardProps) {
             </Link>
           )}
 
-          {/* Nút Đăng ký khuôn mặt (Bổ sung 3: Luôn hiển thị nút, link sang /face-register) */}
-          <Link to={PATHS.FACE_REGISTER}>
-            <Button
-              variant="outline"
-              size="sm"
-              type="button"
-              className="border-primary-200 text-primary-700 hover:bg-primary-50 dark:border-primary-800 dark:text-primary-300 dark:hover:bg-primary-950"
-            >
-              <ScanFace className="mr-1.5 h-3.5 w-3.5 text-primary-600 dark:text-primary-400" />
-              Đăng ký khuôn mặt
-            </Button>
-          </Link>
+          {/* Nút Đăng ký khuôn mặt (Ẩn khi đang chờ thanh toán) */}
+          {!isPendingPayment && (
+            <Link to={`${PATHS.FACE_REGISTER}?bookingId=${booking.id}`}>
+              <Button
+                variant="outline"
+                size="sm"
+                type="button"
+                className="border-primary-200 text-primary-700 hover:bg-primary-50 dark:border-primary-800 dark:text-primary-300 dark:hover:bg-primary-950"
+              >
+                <ScanFace className="mr-1.5 h-3.5 w-3.5 text-primary-600 dark:text-primary-400" />
+                Đăng ký khuôn mặt
+              </Button>
+            </Link>
+          )}
         </div>
 
         {/* Nút Hủy đặt phòng */}

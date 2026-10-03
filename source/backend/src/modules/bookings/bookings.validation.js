@@ -62,6 +62,7 @@ export const listBookingsSchema = {
     limit: z.coerce.number().int().positive().max(100).default(20),
     status: z
       .enum([
+        BOOKING_STATUSES.PENDING_PAYMENT,
         BOOKING_STATUSES.PENDING,
         BOOKING_STATUSES.CONFIRMED,
         BOOKING_STATUSES.CHECKED_IN,

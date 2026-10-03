@@ -71,7 +71,7 @@ export function RoomDetailPage() {
     );
   }
 
-  const roomType = room.room_type;
+  const roomType = room.room_type || room.room_types;
   const isAvailable = room.status === 'available';
   const imageUrl = roomType?.image_url;
   const hasImage = Boolean(imageUrl) && !imageError;

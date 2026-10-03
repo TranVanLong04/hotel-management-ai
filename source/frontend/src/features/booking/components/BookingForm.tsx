@@ -6,11 +6,7 @@ import dayjs from 'dayjs';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import {
-  Calendar,
-  Users,
   CreditCard,
-  MessageSquare,
-  AlertCircle,
   Clock,
   Sparkles,
   ShieldCheck,
@@ -20,7 +16,7 @@ import { Button } from '@components/ui/Button';
 import { Card } from '@components/ui/Card';
 import { useCreateBooking } from '../hooks/useCreateBooking';
 import { useBookingStore } from '@stores/bookingStore';
-import { formatCurrency, formatNumber } from '@utils/format';
+import { formatCurrency } from '@utils/format';
 import { getErrorCode } from '@utils/errorHandler';
 import { PATHS } from '@routes/paths';
 import type { Room, CreateBookingPayload } from '@/types';
@@ -88,8 +84,9 @@ export function BookingForm({ room, disabled = false }: BookingFormProps) {
   const resetStore = useBookingStore((state) => state.reset);
   const { createBooking, loading } = useCreateBooking();
 
-  const maxGuests = room.room_type?.max_guests ?? 4;
-  const basePrice = room.room_type?.base_price ?? 0;
+  const roomType = room.room_type || room.room_types;
+  const maxGuests = roomType?.max_guests ?? 4;
+  const basePrice = roomType?.base_price ?? 0;
 
   // Khởi tạo giá trị mặc định: Check-in hôm nay, check-out ngày mai
   const defaultToday = useMemo(() => dayjs().format('YYYY-MM-DD'), []);
@@ -158,14 +155,14 @@ export function BookingForm({ room, disabled = false }: BookingFormProps) {
     };
 
     try {
-      await createBooking(payload);
+      const createdBooking = await createBooking(payload);
 
-      // Thông báo thành công
-      toast.success('Đặt phòng thành công! Cảm ơn bạn đã lựa chọn khách sạn.');
+      // Giai đoạn 1: Thông báo tạo đơn đặt phòng thành công, yêu cầu thanh toán
+      toast('Đã tạo đơn đặt phòng. Vui lòng thanh toán để hoàn tất.', { icon: 'ℹ️' });
 
-      // Bổ sung 2: Reset Zustand store & chuyển hướng sang /my-bookings
+      // Reset Zustand store & chuyển hướng sang trang thanh toán trực tuyến
       resetStore();
-      navigate(PATHS.MY_BOOKINGS);
+      navigate(PATHS.PAYMENT.replace(':bookingId', createdBooking.id));
     } catch (err: unknown) {
       const code = getErrorCode(err);
 
@@ -303,7 +300,7 @@ export function BookingForm({ room, disabled = false }: BookingFormProps) {
         </div>
 
         <p className="mt-2 text-xs text-gray-400 dark:text-gray-500">
-          * Đã bao gồm thuế và phí dịch vụ. Thanh toán khi nhận hoặc trả phòng.
+          * Đã bao gồm thuế và phí dịch vụ. Thanh toán trực tuyến qua MoMo hoặc VNPay.
         </p>
       </Card>
 
@@ -323,7 +320,7 @@ export function BookingForm({ room, disabled = false }: BookingFormProps) {
         className="w-full font-bold shadow-md cursor-pointer disabled:cursor-not-allowed"
       >
         <Sparkles className="mr-2 h-5 w-5" />
-        Xác nhận đặt phòng
+        Tiếp tục thanh toán
       </Button>
     </form>
   );

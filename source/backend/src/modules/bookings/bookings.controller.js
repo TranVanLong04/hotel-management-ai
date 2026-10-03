@@ -15,7 +15,7 @@ import * as bookingsService from './bookings.service.js';
 export const createBooking = asyncHandler(async (req, res) => {
   const booking = await bookingsService.createBooking(req.user.sub, req.body);
 
-  sendCreated(res, booking, 'Đặt phòng thành công');
+  sendCreated(res, booking, 'Tạo đơn đặt phòng thành công, vui lòng thanh toán');
 });
 
 /**

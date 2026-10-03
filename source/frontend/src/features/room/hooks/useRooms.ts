@@ -27,7 +27,11 @@ export function useRooms(params?: RoomFilterParams) {
     setError(null);
     try {
       const response = await roomApi.list(params);
-      setData(response.data);
+      const rooms = (response.data || []).map((r) => ({
+        ...r,
+        room_type: r.room_type || r.room_types,
+      }));
+      setData(rooms);
       setPagination(response.pagination);
     } catch (err: unknown) {
       const errorMsg =
@@ -46,7 +50,11 @@ export function useRooms(params?: RoomFilterParams) {
       try {
         const response = await roomApi.list(params);
         if (isMounted) {
-          setData(response.data);
+          const rooms = (response.data || []).map((r) => ({
+            ...r,
+            room_type: r.room_type || r.room_types,
+          }));
+          setData(rooms);
           setPagination(response.pagination);
           setError(null);
         }

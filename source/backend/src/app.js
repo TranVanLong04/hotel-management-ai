@@ -57,6 +57,7 @@ import servicesRoutes from './modules/services/services.routes.js';
 import serviceUsagesRoutes from './modules/service-usages/service-usages.routes.js';
 import invoicesRoutes from './modules/invoices/invoices.routes.js';
 import reportsRoutes from './modules/reports/reports.routes.js';
+import paymentsRoutes from './modules/payments/payments.routes.js';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);
@@ -64,6 +65,7 @@ app.use('/api/customers', customersRoutes);
 app.use('/api/room-types', roomTypesRoutes);
 app.use('/api/rooms', roomsRoutes);
 app.use('/api/bookings', bookingsRoutes);
+app.use('/api/payments', paymentsRoutes);
 app.use('/api/faces', facesRoutes);
 app.use('/api/checkin', checkinRoutes);
 app.use('/api/checkout', checkoutRoutes);

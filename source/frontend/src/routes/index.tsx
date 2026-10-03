@@ -11,6 +11,11 @@ import { RoomListPage } from '@/features/room/pages/RoomListPage';
 import { RoomDetailPage } from '@/features/room/pages/RoomDetailPage';
 import { BookingPage } from '@/features/booking/pages/BookingPage';
 import { MyBookingsPage } from '@/features/booking/pages/MyBookingsPage';
+import { BookingDetailPage } from '@/features/booking/pages/BookingDetailPage';
+import { PaymentPage } from '@/features/payment/pages/PaymentPage';
+import { MomoCallbackPage } from '@/features/payment/pages/MomoCallbackPage';
+import { VnpayCallbackPage } from '@/features/payment/pages/VnpayCallbackPage';
+import { FaceRegisterPage } from '@/features/face/pages/FaceRegisterPage';
 import { AdminDashboardPage } from '@/pages/AdminDashboardPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { ForbiddenPage } from '@/pages/ForbiddenPage';
@@ -43,6 +48,15 @@ export const router = createBrowserRouter([
         path: PATHS.ROOM_DETAIL,
         element: <RoomDetailPage />,
       },
+      // Kết quả thanh toán MoMo & VNPay (Public Callback return)
+      {
+        path: PATHS.PAYMENT_MOMO_CALLBACK,
+        element: <MomoCallbackPage />,
+      },
+      {
+        path: PATHS.PAYMENT_VNPAY_CALLBACK,
+        element: <VnpayCallbackPage />,
+      },
       // Các trang yêu cầu khách hàng đăng nhập
       {
         element: <ProtectedRoute />,
@@ -52,17 +66,28 @@ export const router = createBrowserRouter([
             path: PATHS.BOOKING,
             element: <BookingPage />,
           },
-          // Danh sách đặt phòng cá nhân (Phase 5)
+          // Thanh toán trực tuyến (MoMo / VNPay)
+          {
+            path: PATHS.PAYMENT,
+            element: <PaymentPage />,
+          },
+          // Đăng ký khuôn mặt AI
+          {
+            path: PATHS.FACE_REGISTER,
+            element: <FaceRegisterPage />,
+          },
+          // Danh sách đặt phòng cá nhân
           {
             path: PATHS.MY_BOOKINGS,
             element: <MyBookingsPage />,
           },
+          // Chi tiết tiến trình đơn đặt phòng
           {
-            path: PATHS.MY_PROFILE,
-            element: <HomePage />,
+            path: PATHS.BOOKING_DETAIL,
+            element: <BookingDetailPage />,
           },
           {
-            path: PATHS.FACE_REGISTER,
+            path: PATHS.MY_PROFILE,
             element: <HomePage />,
           },
         ],

@@ -12,7 +12,11 @@ export const PATHS = {
 
   // === Customer (yêu cầu đăng nhập) ===
   BOOKING: '/booking/:id',
+  PAYMENT: '/payment/:bookingId',
+  PAYMENT_MOMO_CALLBACK: '/payment/callback/momo',
+  PAYMENT_VNPAY_CALLBACK: '/payment/callback/vnpay',
   MY_BOOKINGS: '/my-bookings',
+  BOOKING_DETAIL: '/my-bookings/:id',
   MY_PROFILE: '/my-profile',
   FACE_REGISTER: '/face-register',
 
@@ -36,4 +40,3 @@ export const PATHS = {
 } as const;
 
 export type AppPath = (typeof PATHS)[keyof typeof PATHS];
-

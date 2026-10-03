@@ -9,8 +9,9 @@ export type Gender = 'male' | 'female' | 'other';
 /** Trạng thái phòng */
 export type RoomStatus = 'available' | 'reserved' | 'occupied' | 'cleaning' | 'maintenance';
 
-/** Trạng thái đặt phòng — state machine: pending → confirmed → checked_in → checked_out */
+/** Trạng thái đặt phòng — state machine: pending_payment → pending → confirmed → checked_in → checked_out */
 export type BookingStatus =
+  | 'pending_payment'
   | 'pending'
   | 'confirmed'
   | 'checked_in'
@@ -97,6 +98,7 @@ export interface Room {
   created_at: string;
   updated_at: string;
   room_type?: RoomType;
+  room_types?: RoomType;
 }
 
 /** Đặt phòng — room_price là snapshot giá tại thời điểm đặt */
@@ -256,7 +258,8 @@ export interface RoomFilterParams extends PaginationParams {
 // ========== VIETNAMESE LABELS (cho hiển thị FE) ==========
 
 export const BOOKING_STATUS_LABELS: Record<BookingStatus, string> = {
-  pending: 'Chờ xác nhận',
+  pending_payment: 'Chờ thanh toán',
+  pending: 'Đang chờ xác nhận',
   confirmed: 'Đã xác nhận',
   checked_in: 'Đã nhận phòng',
   checked_out: 'Đã trả phòng',
@@ -289,9 +292,10 @@ export const ROLE_LABELS: Record<UserRole, string> = {
 // ========== COLOR MAPPINGS (dùng cho Badge component) ==========
 
 export const BOOKING_STATUS_COLORS: Record<BookingStatus, string> = {
+  pending_payment: 'default',
   pending: 'warning',
-  confirmed: 'info',
-  checked_in: 'success',
+  confirmed: 'success',
+  checked_in: 'primary',
   checked_out: 'default',
   cancelled: 'danger',
   no_show: 'warning',
@@ -340,6 +344,34 @@ export interface CreateBookingPayload {
 
 /** Payload hủy booking */
 export interface CancelBookingPayload {
+  reason?: string;
+}
+
+// ========== PAYMENT TYPES (ONLINE GATEWAYS) ==========
+
+/** Cổng thanh toán trực tuyến hỗ trợ */
+export type PaymentGateway = 'momo' | 'vnpay';
+
+/** Payload tạo yêu cầu thanh toán online */
+export interface CreatePaymentPayload {
+  booking_id: string;
+  gateway: PaymentGateway;
+}
+
+/** Dữ liệu trả về khi khởi tạo thanh toán */
+export interface PaymentResponse {
+  gateway: PaymentGateway;
+  payUrl?: string;       // Dùng cho MoMo
+  paymentUrl?: string;   // Dùng cho VNPay
+  orderId?: string;
+  nextStep: 'payment' | 'face_register' | 'my_bookings';
+}
+
+/** Kết quả callback từ cổng thanh toán */
+export interface PaymentCallbackResult {
+  success: boolean;
+  bookingId?: string;
+  nextStep?: 'face_register' | 'my_bookings';
   reason?: string;
 }
 

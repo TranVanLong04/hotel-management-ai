@@ -62,7 +62,7 @@ export const createBooking = async (userId, data) => {
   // Bước 4: Tạo mã booking — BK + YYYYMMDD + 3 số sequence
   const bookingCode = await bookingsRepo.generateBookingCode();
 
-  // Bước 5: Insert booking — SNAPSHOT giá tại thời điểm đặt
+  // Bước 5: Insert booking — SNAPSHOT giá tại thời điểm đặt (trạng thái ban đầu: pending_payment)
   const booking = await bookingsRepo.insert({
     customer_id: customer.id,
     room_id: data.room_id,
@@ -71,13 +71,13 @@ export const createBooking = async (userId, data) => {
     check_out_date: data.check_out_date,
     number_of_guests: data.number_of_guests,
     room_price: room.room_types.base_price,  // SNAPSHOT — lưu giá tại thời điểm đặt
-    status: BOOKING_STATUSES.PENDING,
+    status: BOOKING_STATUSES.PENDING_PAYMENT,
     note: data.note || null,
   });
 
   logger.info(
     { bookingId: booking.id, bookingCode, customerId: customer.id, roomId: data.room_id },
-    'Customer tạo booking mới'
+    'Customer tạo booking mới (chờ thanh toán)'
   );
 
   return booking;
@@ -166,7 +166,7 @@ export const confirmBooking = async (id, userId) => {
 
 /**
  * Hủy booking — customer (chỉ booking mình) hoặc staff.
- * State: pending/confirmed → cancelled
+ * State: pending_payment/pending/confirmed → cancelled
  *
  * @param {string} id - UUID booking
  * @param {Object} user - { sub, role } từ JWT
@@ -186,8 +186,12 @@ export const cancelBooking = async (id, user, reason) => {
     }
   }
 
-  // Kiểm tra trạng thái — chỉ pending/confirmed mới được cancel
-  const cancellableStatuses = [BOOKING_STATUSES.PENDING, BOOKING_STATUSES.CONFIRMED];
+  // Kiểm tra trạng thái — pending_payment, pending, confirmed mới được cancel
+  const cancellableStatuses = [
+    BOOKING_STATUSES.PENDING_PAYMENT,
+    BOOKING_STATUSES.PENDING,
+    BOOKING_STATUSES.CONFIRMED,
+  ];
   if (!cancellableStatuses.includes(booking.status)) {
     throw new ConflictError(
       'BOOKING_CANNOT_CANCEL',

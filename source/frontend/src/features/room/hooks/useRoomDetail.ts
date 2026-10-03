@@ -23,7 +23,11 @@ export function useRoomDetail(id: string | undefined) {
 
     try {
       const response = await roomApi.getById(id);
-      setData(response.data);
+      const roomData = response.data;
+      if (roomData) {
+        roomData.room_type = roomData.room_type || roomData.room_types;
+      }
+      setData(roomData);
     } catch (err: unknown) {
       const errorMsg =
         err instanceof Error ? err.message : 'Không thể tải thông tin phòng';
@@ -48,7 +52,11 @@ export function useRoomDetail(id: string | undefined) {
       try {
         const response = await roomApi.getById(id);
         if (isMounted) {
-          setData(response.data);
+          const roomData = response.data;
+          if (roomData) {
+            roomData.room_type = roomData.room_type || roomData.room_types;
+          }
+          setData(roomData);
           setError(null);
         }
       } catch (err: unknown) {

@@ -20,7 +20,7 @@ interface RoomCardProps {
 export function RoomCard({ room }: RoomCardProps) {
   const [imageError, setImageError] = useState(false);
 
-  const roomType = room.room_type;
+  const roomType = room.room_type || room.room_types;
   const imageUrl = roomType?.image_url;
   const hasImage = Boolean(imageUrl) && !imageError;
 
