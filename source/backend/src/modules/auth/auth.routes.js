@@ -20,6 +20,9 @@ router.post('/register', validate(registerSchema), authController.register);
 // Đăng nhập — validate body
 router.post('/login', validate(loginSchema), authController.login);
 
+// Đăng xuất — cần JWT token
+router.post('/logout', authenticate, authController.logout);
+
 // Lấy thông tin user hiện tại — cần JWT token
 router.get('/me', authenticate, authController.getMe);
 

@@ -109,18 +109,18 @@ export const login = async (email, password) => {
   const user = await authRepo.findByEmail(email);
   if (!user) {
     // Không tiết lộ email có tồn tại hay không
-    throw new UnauthorizedError('Email hoặc mật khẩu không đúng');
+    throw new UnauthorizedError('Email hoặc mật khẩu không đúng', 'AUTH_INVALID_CREDENTIALS');
   }
 
   // 2. Compare password — dùng CÙNG message nếu sai
   const isPasswordValid = await bcrypt.compare(password, user.password_hash);
   if (!isPasswordValid) {
-    throw new UnauthorizedError('Email hoặc mật khẩu không đúng');
+    throw new UnauthorizedError('Email hoặc mật khẩu không đúng', 'AUTH_INVALID_CREDENTIALS');
   }
 
   // 3. Kiểm tra tài khoản có bị khóa không
   if (!user.is_active) {
-    throw new ForbiddenError('Tài khoản đã bị khóa');
+    throw new ForbiddenError('Tài khoản đã bị khóa', 'AUTH_ACCOUNT_DISABLED');
   }
 
   // 4. Generate JWT token

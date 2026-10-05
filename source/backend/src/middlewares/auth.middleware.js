@@ -38,12 +38,12 @@ export const authenticate = (req, _res, next) => {
   } catch (error) {
     // Token hết hạn
     if (error.name === 'TokenExpiredError') {
-      return next(new UnauthorizedError('Phiên đăng nhập đã hết hạn'));
+      return next(new UnauthorizedError('Phiên đăng nhập đã hết hạn', 'AUTH_TOKEN_EXPIRED'));
     }
 
     // Token không hợp lệ (sai format, sai signature, v.v.)
     if (error.name === 'JsonWebTokenError') {
-      return next(new UnauthorizedError('Token không hợp lệ'));
+      return next(new UnauthorizedError('Token không hợp lệ', 'AUTH_TOKEN_INVALID'));
     }
 
     // Lỗi từ authenticate logic (UnauthorizedError thrown ở trên)

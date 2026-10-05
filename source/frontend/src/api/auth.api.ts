@@ -26,14 +26,10 @@ export const authApi = {
 
   /**
    * Đăng xuất người dùng
-   * Gửi request logout (nếu backend hỗ trợ) hoặc ignore lỗi do JWT stateless
+   * Gửi request logout tới backend để ghi log và xác thực
    */
-  logout: async (): Promise<void> => {
-    try {
-      await api.post('/auth/logout');
-    } catch {
-      // Backend JWT stateless có thể không có endpoint logout, bỏ qua lỗi
-    }
+  logout: async (): Promise<ApiResponse<null>> => {
+    return api.post('/auth/logout');
   },
 
   /**

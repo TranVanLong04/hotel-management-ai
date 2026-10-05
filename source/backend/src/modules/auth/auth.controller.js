@@ -1,5 +1,6 @@
 import { asyncHandler } from '../../utils/asyncHandler.js';
 import { sendSuccess, sendCreated } from '../../utils/response.js';
+import { logger } from '../../config/logger.js';
 import * as authService from './auth.service.js';
 
 /**
@@ -31,6 +32,16 @@ export const login = asyncHandler(async (req, res) => {
   const result = await authService.login(email, password);
 
   sendSuccess(res, result, 'Đăng nhập thành công');
+});
+
+/**
+ * POST /api/auth/logout
+ * Header: Authorization: Bearer <token>
+ * Cần middleware `authenticate` trước.
+ */
+export const logout = asyncHandler(async (req, res) => {
+  logger.info({ userId: req.user.sub }, 'Đăng xuất thành công');
+  sendSuccess(res, null, 'Đăng xuất thành công');
 });
 
 /**
