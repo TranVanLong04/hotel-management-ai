@@ -16,6 +16,7 @@ import { PaymentPage } from '@/features/payment/pages/PaymentPage';
 import { MomoCallbackPage } from '@/features/payment/pages/MomoCallbackPage';
 import { VnpayCallbackPage } from '@/features/payment/pages/VnpayCallbackPage';
 import { FaceRegisterPage } from '@/features/face/pages/FaceRegisterPage';
+import { ProfilePage } from '@/features/profile/pages/ProfilePage';
 import { AdminDashboardPage } from '@/pages/AdminDashboardPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { ForbiddenPage } from '@/pages/ForbiddenPage';
@@ -86,9 +87,14 @@ export const router = createBrowserRouter([
             path: PATHS.BOOKING_DETAIL,
             element: <BookingDetailPage />,
           },
+          // Hồ sơ cá nhân khách hàng (Feature 02)
           {
             path: PATHS.MY_PROFILE,
-            element: <HomePage />,
+            element: (
+              <RoleRoute allowedRoles={['customer']}>
+                <ProfilePage />
+              </RoleRoute>
+            ),
           },
         ],
       },

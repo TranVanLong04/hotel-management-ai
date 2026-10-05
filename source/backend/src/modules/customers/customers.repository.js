@@ -126,6 +126,26 @@ export const findById = async (id) => {
 };
 
 /**
+ * Tạo bản ghi customer mới.
+ * @param {Object} data - { user_id, full_name, phone, email }
+ * @returns {Promise<Object>} customer đã tạo
+ */
+export const createCustomer = async (data) => {
+  const { data: customer, error } = await supabaseAdmin
+    .from('customers')
+    .insert(data)
+    .select('*')
+    .single();
+
+  if (error) {
+    logger.error({ err: error }, 'CustomersRepository: createCustomer failed');
+    throw new InternalError('Lỗi tạo hồ sơ khách hàng');
+  }
+
+  return customer;
+};
+
+/**
  * Tìm customer theo identity_number — dùng cho check unique CCCD.
  * @param {string} identityNumber
  * @param {string} excludeUserId - loại trừ user hiện tại
@@ -146,3 +166,4 @@ export const findByIdentityNumber = async (identityNumber, excludeUserId) => {
 
   return data;
 };
+

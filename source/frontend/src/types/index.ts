@@ -375,3 +375,4 @@ export interface PaymentCallbackResult {
   reason?: string;
 }
 export * from './face';
+export * from './customer';

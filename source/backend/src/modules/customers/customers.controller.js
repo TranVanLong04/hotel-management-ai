@@ -12,10 +12,11 @@ import * as customersService from './customers.service.js';
  * Customer tự xem profile của mình.
  */
 export const getMyProfile = asyncHandler(async (req, res) => {
-  const customer = await customersService.getMyProfile(req.user.sub);
+  const customer = await customersService.getMyProfile(req.user.sub, req.user);
 
   sendSuccess(res, customer);
 });
+
 
 /**
  * PATCH /api/customers/me
