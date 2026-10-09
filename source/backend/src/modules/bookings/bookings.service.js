@@ -18,65 +18,30 @@ import * as bookingsRepo from './bookings.repository.js';
 /**
  * Tạo booking mới.
  * Flow:
- * 1. Tìm customer từ userId
- * 2. Kiểm tra phòng tồn tại + trạng thái hợp lệ
- * 3. Kiểm tra số khách không vượt max
- * 4. Tạo booking_code
- * 5. Insert với room_price = base_price (SNAPSHOT GIÁ)
+ * 1. Gọi repository createBookingWithLock (thực hiện RPC nguyên tử kèm lock & DB constraint)
+ * 2. Log thông tin tạo booking
  *
  * @param {string} userId - UUID (từ JWT sub)
  * @param {Object} data - { room_id, check_in_date, check_out_date, number_of_guests, note }
  * @returns {Promise<Object>} booking vừa tạo
  */
 export const createBooking = async (userId, data) => {
-  // Bước 1: Tìm customer từ userId
-  const customer = await bookingsRepo.findCustomerByUserId(userId);
-  if (!customer) {
-    throw new NotFoundError('Customer');
-  }
-
-  // Bước 2: Kiểm tra phòng tồn tại
-  const room = await bookingsRepo.findRoomWithType(data.room_id);
-  if (!room) {
-    throw new NotFoundError('Room');
-  }
-
-  // Bước 2b: Kiểm tra phòng còn hoạt động
-  if (!room.is_active) {
-    throw new BadRequestError('Phòng đã ngừng sử dụng');
-  }
-
-  // Bước 2c: Kiểm tra phòng không đang bảo trì
-  if (room.status === 'maintenance') {
-    throw new BadRequestError('Phòng đang bảo trì');
-  }
-
-  // Bước 3: Kiểm tra số khách không vượt max_guests của loại phòng
-  if (data.number_of_guests > room.room_types.max_guests) {
-    throw new ConflictError(
-      'BOOKING_GUESTS_EXCEED',
-      `Số khách vượt quá sức chứa tối đa (${room.room_types.max_guests} khách)`
-    );
-  }
-
-  // Bước 4: Tạo mã booking — BK + YYYYMMDD + 3 số sequence
-  const bookingCode = await bookingsRepo.generateBookingCode();
-
-  // Bước 5: Insert booking — SNAPSHOT giá tại thời điểm đặt (trạng thái ban đầu: pending_payment)
-  const booking = await bookingsRepo.insert({
-    customer_id: customer.id,
-    room_id: data.room_id,
-    booking_code: bookingCode,
-    check_in_date: data.check_in_date,
-    check_out_date: data.check_out_date,
-    number_of_guests: data.number_of_guests,
-    room_price: room.room_types.base_price,  // SNAPSHOT — lưu giá tại thời điểm đặt
-    status: BOOKING_STATUSES.PENDING_PAYMENT,
+  const booking = await bookingsRepo.createBookingWithLock({
+    userId,
+    roomId: data.room_id,
+    checkInDate: data.check_in_date,
+    checkOutDate: data.check_out_date,
+    numberOfGuests: data.number_of_guests,
     note: data.note || null,
   });
 
   logger.info(
-    { bookingId: booking.id, bookingCode, customerId: customer.id, roomId: data.room_id },
+    {
+      bookingId: booking.id,
+      bookingCode: booking.booking_code,
+      customerId: booking.customer_id,
+      roomId: data.room_id,
+    },
     'Customer tạo booking mới (chờ thanh toán)'
   );
 

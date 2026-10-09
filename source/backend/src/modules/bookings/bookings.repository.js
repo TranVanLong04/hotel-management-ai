@@ -1,11 +1,75 @@
 import { supabaseAdmin } from '../../config/supabase.js';
-import { InternalError, ConflictError } from '../../utils/errors.js';
+import { InternalError, ConflictError, NotFoundError, BadRequestError } from '../../utils/errors.js';
 import { logger } from '../../config/logger.js';
 
 /**
  * Repository — truy vấn DB cho module Bookings.
  * Tham chiếu: docs/03-backend/phase5-booking/README.md
  */
+
+/**
+ * Tạo booking mới sử dụng PostgreSQL Stored Procedure (RPC) kèm Advisory Lock & Exclusion constraint.
+ * Đảm bảo nguyên tử (Atomic), chống race condition sinh trùng mã booking_code và chống double booking.
+ *
+ * @param {Object} params - { userId, roomId, checkInDate, checkOutDate, numberOfGuests, note }
+ * @returns {Promise<Object>} booking vừa tạo kèm thông tin JOIN
+ */
+export const createBookingWithLock = async ({
+  userId,
+  roomId,
+  checkInDate,
+  checkOutDate,
+  numberOfGuests,
+  note = null,
+}) => {
+  const { data, error } = await supabaseAdmin.rpc('create_booking_with_lock', {
+    p_user_id: userId,
+    p_room_id: roomId,
+    p_check_in_date: checkInDate,
+    p_check_out_date: checkOutDate,
+    p_number_of_guests: numberOfGuests,
+    p_note: note,
+  });
+
+  if (error) {
+    const msg = error.message || '';
+    // PG 23P01 hoặc Exclusion constraint violation (booking overlap)
+    if (error.code === '23P01' || msg.includes('no_overlapping_bookings') || msg.includes('BOOKING_OVERLAP')) {
+      throw new ConflictError('BOOKING_OVERLAP', 'Phòng đã được đặt trong khoảng thời gian này');
+    }
+    // PG 23505 — Unique constraint violation (duplicate booking_code)
+    if (
+      error.code === '23505' &&
+      (msg.includes('bookings_booking_code_key') ||
+        (error.details && error.details.includes('booking_code')))
+    ) {
+      throw new ConflictError(
+        'DUPLICATE_BOOKING_CODE',
+        'Mã đặt phòng đã tồn tại, vui lòng thử lại'
+      );
+    }
+    if (msg.includes('CUSTOMER_NOT_FOUND') || error.code === 'P0001') {
+      throw new NotFoundError('Customer', 'Thông tin khách hàng không tồn tại');
+    }
+    if (msg.includes('ROOM_NOT_FOUND') || error.code === 'P0002') {
+      throw new NotFoundError('Room', 'Phòng không tồn tại');
+    }
+    if (msg.includes('ROOM_INACTIVE') || error.code === 'P0003') {
+      throw new BadRequestError('Phòng đã ngừng sử dụng');
+    }
+    if (msg.includes('ROOM_MAINTENANCE') || error.code === 'P0004') {
+      throw new BadRequestError('Phòng đang bảo trì');
+    }
+    if (msg.includes('GUESTS_EXCEED') || error.code === 'P0005') {
+      throw new ConflictError('BOOKING_GUESTS_EXCEED', 'Số khách vượt quá sức chứa tối đa');
+    }
+
+    logger.error({ err: error }, 'BookingsRepository: createBookingWithLock failed');
+    throw new InternalError('Lỗi tạo booking');
+  }
+
+  return data;
+};
 
 /**
  * Lấy thông tin phòng kèm loại phòng — dùng để check nghiệp vụ trước khi tạo booking.

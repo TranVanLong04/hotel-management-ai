@@ -2,6 +2,7 @@ import app from './app.js';
 import { env } from './config/env.js';
 import { logger } from './config/logger.js';
 import { testConnection } from './config/supabase.js';
+import bookingCleanupJob from './jobs/booking-cleanup.job.js';
 
 const PORT = env.PORT;
 
@@ -9,7 +10,8 @@ const PORT = env.PORT;
  * Khởi động server.
  * 1. Test kết nối Supabase
  * 2. Listen trên PORT
- * 3. Setup graceful shutdown
+ * 3. Bắt đầu background jobs
+ * 4. Setup graceful shutdown
  */
 const startServer = async () => {
   try {
@@ -20,11 +22,17 @@ const startServer = async () => {
       logger.info(`🚀 Server running on http://localhost:${PORT}`);
       logger.info(`📍 Environment: ${env.NODE_ENV}`);
       logger.info(`❤️  Health check: http://localhost:${PORT}/health`);
+
+      // Khởi động cron job dọn dẹp booking hết hạn
+      bookingCleanupJob.start();
     });
 
     // === Graceful shutdown ===
     const gracefulShutdown = (signal) => {
       logger.info(`${signal} received. Shutting down gracefully...`);
+
+      // Dừng cron job
+      bookingCleanupJob.stop();
 
       server.close(() => {
         logger.info('✅ Server closed');
