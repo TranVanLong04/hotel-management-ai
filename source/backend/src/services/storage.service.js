@@ -1,40 +1,41 @@
-import { supabaseAdmin } from '../config/supabase.js';
+import { createClient } from '@supabase/supabase-js';
+import { env } from '../config/env.js';
 import { logger } from '../config/logger.js';
-import { InternalError } from '../utils/errors.js';
+import { InternalError, ServiceUnavailableError } from '../utils/errors.js';
 
 /**
  * Service lưu trữ hình ảnh trên Supabase Storage.
  * Bucket 'faces' là private.
- * Tham chiếu: docs/03-backend/phase6-face-service/README.md
  */
 
 const BUCKET_NAME = 'faces';
 const DEFAULT_SIGNED_URL_EXPIRES_IN = 7 * 24 * 60 * 60; // 7 ngày (giây)
 
-/**
- * Lấy đuôi file từ mimeType.
- * @param {string} mimeType
- * @returns {string} ext ('jpg' | 'png')
- */
+// TẠO CLIENT RIÊNG CHO STORAGE: 
+// Đảm bảo không bị dính session của user (tránh lỗi RLS)
+const supabaseStorageAdmin = createClient(
+  env.SUPABASE_URL,
+  env.SUPABASE_SERVICE_ROLE_KEY,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false, // Bắt buộc phải false
+      detectSessionInUrl: false,
+    },
+  }
+);
+
 const getExtension = (mimeType) => {
   if (mimeType === 'image/png') return 'png';
-  return 'jpg'; // mặc định cho image/jpeg, image/jpg
+  return 'jpg';
 };
 
-/**
- * Upload ảnh khuôn mặt lên Storage và tạo Signed URL.
- *
- * @param {Buffer} buffer - Buffer file ảnh
- * @param {string} userId - UUID user
- * @param {string} mimeType - mime type của file ('image/jpeg', 'image/png', ...)
- * @returns {Promise<{ path: string, url: string }>}
- */
 export const uploadFaceImage = async (buffer, userId, mimeType = 'image/jpeg') => {
   const ext = getExtension(mimeType);
   const filePath = `${userId}/${Date.now()}.${ext}`;
 
-  // 1. Upload buffer lên bucket faces (upsert: false để không ghi đè)
-  const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
+  // 1. Upload buffer lên bucket faces (dùng supabaseStorageAdmin thay vì supabaseAdmin)
+  const { error: uploadError } = await supabaseStorageAdmin.storage
     .from(BUCKET_NAME)
     .upload(filePath, buffer, {
       contentType: mimeType,
@@ -42,24 +43,18 @@ export const uploadFaceImage = async (buffer, userId, mimeType = 'image/jpeg') =
     });
 
   if (uploadError) {
-    logger.warn({ err: uploadError.message, filePath }, 'StorageService: uploadFaceImage failed, using fallback URL');
-    return {
-      path: filePath,
-      url: `https://storage.hotel-ai.com/faces/${filePath}`,
-    };
+    logger.error({ err: uploadError.message, filePath }, 'StorageService: Upload ảnh thất bại');
+    throw new ServiceUnavailableError('Không thể lưu ảnh khuôn mặt lên hệ thống. Vui lòng thử lại sau.');
   }
 
-  // 2. Tạo signed URL (mặc định 7 ngày)
-  const { data: signedData, error: signedError } = await supabaseAdmin.storage
+  // 2. Tạo signed URL (dùng supabaseStorageAdmin)
+  const { data: signedData, error: signedError } = await supabaseStorageAdmin.storage
     .from(BUCKET_NAME)
     .createSignedUrl(filePath, DEFAULT_SIGNED_URL_EXPIRES_IN);
 
   if (signedError || !signedData?.signedUrl) {
-    logger.warn({ err: signedError?.message, filePath }, 'StorageService: createSignedUrl failed, using fallback URL');
-    return {
-      path: filePath,
-      url: `https://storage.hotel-ai.com/faces/${filePath}`,
-    };
+    logger.error({ err: signedError?.message, filePath }, 'StorageService: Tạo signed URL thất bại');
+    throw new InternalError('Không thể tạo liên kết truy cập ảnh');
   }
 
   return {
@@ -68,15 +63,8 @@ export const uploadFaceImage = async (buffer, userId, mimeType = 'image/jpeg') =
   };
 };
 
-/**
- * Tạo Signed URL cho file đã lưu.
- *
- * @param {string} path - Đường dẫn file trong bucket
- * @param {number} [expiresIn=3600] - Thời gian sống của link (giây)
- * @returns {Promise<string>} Signed URL
- */
 export const getSignedUrl = async (path, expiresIn = 3600) => {
-  const { data, error } = await supabaseAdmin.storage
+  const { data, error } = await supabaseStorageAdmin.storage
     .from(BUCKET_NAME)
     .createSignedUrl(path, expiresIn);
 
@@ -88,17 +76,11 @@ export const getSignedUrl = async (path, expiresIn = 3600) => {
   return data.signedUrl;
 };
 
-/**
- * Xóa file ảnh trên Storage — không throw lỗi, chỉ ghi log.
- *
- * @param {string} path - Đường dẫn file trong bucket
- * @returns {Promise<void>}
- */
 export const deleteFaceImage = async (path) => {
   if (!path) return;
 
   try {
-    const { error } = await supabaseAdmin.storage
+    const { error } = await supabaseStorageAdmin.storage
       .from(BUCKET_NAME)
       .remove([path]);
 
