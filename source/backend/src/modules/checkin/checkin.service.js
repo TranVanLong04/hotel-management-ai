@@ -52,10 +52,25 @@ export const verifyCheckin = async (bookingId, file, staffUserId) => {
   // 4. Lấy hồ sơ khuôn mặt active của khách hàng kèm embedding để so khớp
   const faceProfile = await facesRepo.findActiveWithEmbeddingByCustomerId(booking.customer_id);
   if (!faceProfile || !faceProfile.face_embedding) {
-    throw new BadRequestError(
-      'Khách hàng chưa đăng ký hồ sơ khuôn mặt. Vui lòng đăng ký trước hoặc sử dụng check-in thủ công.',
-      'FACE_PROFILE_NOT_FOUND'
+    throw new NotFoundError(
+      'Face profile',
+      'Khách hàng chưa đăng ký hồ sơ khuôn mặt. Vui lòng đăng ký trước hoặc sử dụng check-in thủ công.'
     );
+  }
+
+  // Parse pgvector face_embedding nếu là chuỗi string JSON từ Supabase
+  let registeredEmbedding = faceProfile.face_embedding;
+  if (typeof registeredEmbedding === 'string') {
+    try {
+      registeredEmbedding = JSON.parse(registeredEmbedding);
+    } catch (parseErr) {
+      logger.error({ err: parseErr }, 'Lỗi parse face_embedding từ Supabase DB');
+      throw new InternalError('Dữ liệu vector khuôn mặt trong hệ thống không hợp lệ');
+    }
+  }
+
+  if (!Array.isArray(registeredEmbedding) || registeredEmbedding.length === 0) {
+    throw new InternalError('Dữ liệu vector khuôn mặt không đúng định dạng');
   }
 
   // 5. Trích xuất embedding từ ảnh chụp hiện tại
@@ -65,7 +80,7 @@ export const verifyCheckin = async (bookingId, file, staffUserId) => {
   // 6. So khớp với embedding đã đăng ký
   const compareResult = await aiService.compareFaces(
     newEmbedding,
-    faceProfile.face_embedding,
+    registeredEmbedding,
     FACE_MATCH_THRESHOLD
   );
 

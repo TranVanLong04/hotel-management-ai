@@ -18,6 +18,7 @@ import { VnpayCallbackPage } from '@/features/payment/pages/VnpayCallbackPage';
 import { FaceRegisterPage } from '@/features/face/pages/FaceRegisterPage';
 import { ProfilePage } from '@/features/profile/pages/ProfilePage';
 import { AdminDashboardPage } from '@/pages/AdminDashboardPage';
+import { CheckinPage } from '@/features/checkin/pages/CheckinPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { ForbiddenPage } from '@/pages/ForbiddenPage';
 import { PATHS } from './paths';
@@ -189,7 +190,7 @@ export const router = createBrowserRouter([
           // Nghiệp vụ Lễ tân (Staff & Admin)
           {
             path: PATHS.STAFF_CHECKIN,
-            element: <AdminDashboardPage />,
+            element: <CheckinPage />,
           },
           {
             path: PATHS.STAFF_CHECKOUT,
