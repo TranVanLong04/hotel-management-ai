@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   ShieldAlert,
   CreditCard,
-  FileText,
   Loader2,
   ArrowLeft,
   CheckCircle,

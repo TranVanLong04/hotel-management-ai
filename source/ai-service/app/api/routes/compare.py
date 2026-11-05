@@ -18,7 +18,7 @@ async def compare_faces(
     """
     So sánh 2 vector embedding 512D qua độ tương đồng Cosine Similarity.
     """
-    threshold = payload.threshold if payload.threshold is not None else 0.75
+    threshold = payload.threshold if payload.threshold is not None else 0.55
     result = calculate_similarity(
         embedding1=payload.embedding1,
         embedding2=payload.embedding2,

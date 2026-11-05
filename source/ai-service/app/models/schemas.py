@@ -1,3 +1,7 @@
+#Định nghĩa kiểu dữ liệu (Schemas)
+#Định nghĩa cấu trúc request/response cho EmbedData, CompareRequest, ModelComparisonMetrics, CompareModelsResponseData.
+
+
 from typing import List, Optional, Any, Generic, TypeVar
 from pydantic import BaseModel, Field, field_validator
 
@@ -27,7 +31,7 @@ class HealthData(BaseModel):
     status: str = "ok"
     model_loaded: bool
     uptime_seconds: float
-    version: str = "1.0.0"
+    version: str = "1.0.0"      
 
 
 class EmbedData(BaseModel):
@@ -59,3 +63,37 @@ class CompareData(BaseModel):
     is_match: bool = Field(..., description="True nếu similarity >= threshold")
     threshold: float = Field(..., description="Ngưỡng đã áp dụng để so khớp")
     distance: float = Field(..., description="Khoảng cách cosine (1 - similarity)")
+
+
+class ModelResultData(BaseModel):
+    """Chi tiết kết quả đánh giá của một mô hình đơn lẻ."""
+    model_name: str
+    model_version: str
+    checkpoint: str
+    similarity: float
+    threshold: float
+    is_match: bool
+    inference_time_ms: float
+    total_time_ms: float
+    face_detected: bool = True
+    embedding_dim: Optional[int] = None
+    bbox_img1: Optional[List[float]] = None
+    bbox_img2: Optional[List[float]] = None
+    confidence_img1: Optional[float] = None
+    confidence_img2: Optional[float] = None
+
+
+class ComparisonAnalysisData(BaseModel):
+    """Phân tích so sánh chênh lệch giữa hai mô hình."""
+    is_agreement: bool
+    discrepancy_type: Optional[str] = None
+    delta_similarity: float
+    latency_difference_ms: float
+    overall_elapsed_ms: float
+
+
+class CompareModelsResponseData(BaseModel):
+    """Kết quả so sánh song song giữa FaceNet và InsightFace."""
+    facenet: ModelResultData
+    insightface: ModelResultData
+    analysis: ComparisonAnalysisData

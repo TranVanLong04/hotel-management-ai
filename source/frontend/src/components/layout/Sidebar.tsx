@@ -18,7 +18,9 @@ import {
   Home,
   LogOut,
   UtensilsCrossed,
+  BrainCircuit,
 } from 'lucide-react';
+
 import { useAuthStore } from '@stores/authStore';
 import { useAuthActions } from '@/features/auth/hooks/useAuthActions';
 import { PATHS } from '@routes/paths';
@@ -142,9 +144,16 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
           icon: BarChart3,
           roles: ['admin'],
         },
+        {
+          name: 'So sánh mô hình AI',
+          path: PATHS.ADMIN_AI_COMPARISON,
+          icon: BrainCircuit,
+          roles: ['admin'],
+        },
       ],
     },
   ];
+
 
   // Lọc các section và item theo role của user hiện tại
   const visibleSections = navSections

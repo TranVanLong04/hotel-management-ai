@@ -2,17 +2,12 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
   ArrowLeft,
-  Calendar,
-  Users,
-  Moon,
-  DoorOpen,
   CreditCard,
   ScanFace,
   CheckCircle2,
   Clock,
   Sparkles,
   AlertCircle,
-  FileText,
 } from 'lucide-react';
 import { Card } from '@components/ui/Card';
 import { Badge } from '@components/ui/Badge';

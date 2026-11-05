@@ -3,8 +3,8 @@ import { Camera, CameraOff, RefreshCw, AlertTriangle, Lightbulb, Sparkles } from
 import { Button } from '@components/ui/Button';
 
 interface FaceCameraProps {
-  videoRef: RefObject<HTMLVideoElement>;
-  canvasRef?: RefObject<HTMLCanvasElement>;
+  videoRef: RefObject<HTMLVideoElement | null>;
+  canvasRef?: RefObject<HTMLCanvasElement | null>;
   isActive: boolean;
   isLoading: boolean;
   error: string | null;

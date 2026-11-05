@@ -19,9 +19,11 @@ import { FaceRegisterPage } from '@/features/face/pages/FaceRegisterPage';
 import { ProfilePage } from '@/features/profile/pages/ProfilePage';
 import { AdminDashboardPage } from '@/pages/AdminDashboardPage';
 import { CheckinPage } from '@/features/checkin/pages/CheckinPage';
+import { AiComparisonPage } from '@/features/ai-comparison/pages/AiComparisonPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { ForbiddenPage } from '@/pages/ForbiddenPage';
 import { PATHS } from './paths';
+
 
 /**
  * Cấu hình toàn bộ hệ thống Routes của ứng dụng
@@ -186,6 +188,15 @@ export const router = createBrowserRouter([
               </RoleRoute>
             ),
           },
+          {
+            path: PATHS.ADMIN_AI_COMPARISON,
+            element: (
+              <RoleRoute allowedRoles={['admin']}>
+                <AiComparisonPage />
+              </RoleRoute>
+            ),
+          },
+
 
           // Nghiệp vụ Lễ tân (Staff & Admin)
           {

@@ -33,6 +33,8 @@ export const PATHS = {
   ADMIN_USERS: '/admin/users',
   ADMIN_BOOKINGS: '/admin/bookings',
   ADMIN_REPORTS: '/admin/reports',
+  ADMIN_AI_COMPARISON: '/admin/ai-comparison',
+
 
   // === Error pages ===
   FORBIDDEN: '/403',

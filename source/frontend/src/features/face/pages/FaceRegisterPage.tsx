@@ -9,7 +9,6 @@ import {
 } from 'lucide-react';
 import { Card } from '@components/ui/Card';
 import { Button } from '@components/ui/Button';
-import { PATHS } from '@routes/paths';
 import { useCamera } from '../hooks/useCamera';
 import { useFaceProfile } from '../hooks/useFaceProfile';
 import { FaceCamera } from '../components/FaceCamera';

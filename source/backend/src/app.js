@@ -58,6 +58,7 @@ import serviceUsagesRoutes from './modules/service-usages/service-usages.routes.
 import invoicesRoutes from './modules/invoices/invoices.routes.js';
 import reportsRoutes from './modules/reports/reports.routes.js';
 import paymentsRoutes from './modules/payments/payments.routes.js';
+import aiComparisonRoutes from './modules/ai-comparison/ai-comparison.routes.js';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);
@@ -73,6 +74,8 @@ app.use('/api/services', servicesRoutes);
 app.use('/api/service-usages', serviceUsagesRoutes);
 app.use('/api/invoices', invoicesRoutes);
 app.use('/api/reports', reportsRoutes);
+app.use('/api/ai-comparison', aiComparisonRoutes);
+
 
 // === 404 handler — phải đặt sau tất cả routes ===
 app.use(notFoundHandler);

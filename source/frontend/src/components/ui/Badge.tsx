@@ -4,6 +4,7 @@ type BadgeVariant = 'default' | 'primary' | 'success' | 'warning' | 'danger' | '
 
 interface BadgeProps {
   variant?: BadgeVariant;
+  size?: 'sm' | 'md' | 'lg';
   children: ReactNode;
   className?: string;
 }
@@ -18,12 +19,18 @@ const variantClasses: Record<BadgeVariant, string> = {
   info: 'bg-info-100 text-info-800 dark:bg-info-900/50 dark:text-info-300',
 };
 
+const sizeClasses: Record<'sm' | 'md' | 'lg', string> = {
+  sm: 'text-xs px-2 py-0.5',
+  md: 'text-xs px-2.5 py-1',
+  lg: 'text-sm px-3 py-1.5 font-medium',
+};
+
 /**
  * Badge hiển thị trạng thái — dùng kết hợp với BOOKING_STATUS_COLORS, ROOM_STATUS_COLORS
  */
-export function Badge({ variant = 'default', children, className = '' }: BadgeProps) {
+export function Badge({ variant = 'default', size = 'md', children, className = '' }: BadgeProps) {
   return (
-    <span className={`badge ${variantClasses[variant]} ${className}`}>
+    <span className={`badge ${sizeClasses[size]} ${variantClasses[variant]} ${className}`}>
       {children}
     </span>
   );

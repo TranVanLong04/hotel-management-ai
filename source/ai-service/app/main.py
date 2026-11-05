@@ -7,7 +7,8 @@ from fastapi.exceptions import RequestValidationError, HTTPException
 from app.core.config import get_settings
 from app.core.logger import logger
 from app.services.face_detection import get_face_app
-from app.api.routes import health, embed, compare
+from app.services.facenet_service import get_facenet_session
+from app.api.routes import health, embed, compare, compare_models
 
 from contextlib import asynccontextmanager
 
@@ -20,12 +21,15 @@ async def lifespan(app: FastAPI):
     try:
         # Preload model InsightFace
         get_face_app()
+        # Preload model FaceNet
+        get_facenet_session()
         logger.info("AI Service đã sẵn sàng tiếp nhận yêu cầu.")
     except Exception as e:
         logger.warning(f"Chưa thể preload model lúc startup: {e}. Model sẽ được nạp khi có request đầu tiên.")
     
     yield
     logger.info("AI Service đang dừng...")
+
 
 
 app = FastAPI(
@@ -156,3 +160,5 @@ async def generic_exception_handler(request: Request, exc: Exception):
 app.include_router(health.router)
 app.include_router(embed.router)
 app.include_router(compare.router)
+app.include_router(compare_models.router)
+

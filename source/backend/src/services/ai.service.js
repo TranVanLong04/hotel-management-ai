@@ -156,3 +156,81 @@ export const checkAIHealth = async () => {
     return { status: 'down', error: error.message };
   }
 };
+
+/**
+ * So sánh 2 ảnh chạy song song FaceNet và InsightFace.
+ *
+ * @param {Buffer} buffer1 - Buffer ảnh 1
+ * @param {Buffer} buffer2 - Buffer ảnh 2
+ * @param {Object} [options] - { thresholdFacenet, thresholdInsightface, filename1, filename2 }
+ * @returns {Promise<{ facenet: Object, insightface: Object, analysis: Object }>}
+ */
+export const compareModels = async (
+  buffer1,
+  buffer2,
+  {
+    thresholdFacenet = 0.70,
+    thresholdInsightface = 0.75,
+    filename1 = 'image1.jpg',
+    filename2 = 'image2.jpg',
+  } = {}
+) => {
+  const formData = new FormData();
+  formData.append('image1', buffer1, { filename: filename1 });
+  formData.append('image2', buffer2, { filename: filename2 });
+  formData.append('threshold_facenet', String(thresholdFacenet));
+  formData.append('threshold_insightface', String(thresholdInsightface));
+
+  try {
+    const response = await aiClient.post('/compare-models', formData, {
+      headers: {
+        ...formData.getHeaders(),
+      },
+      timeout: 30000,
+    });
+
+    if (!response.data || !response.data.success) {
+      throw new InternalError('AI Service trả về kết quả không hợp lệ khi so sánh hai mô hình');
+    }
+
+    return response.data.data;
+  } catch (error) {
+    if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
+      logger.error({ err: error.message }, 'AI Service connection refused in compareModels');
+      throw new ServiceUnavailableError('Dịch vụ AI tạm thời không khả dụng');
+    }
+
+    if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+      logger.error({ err: error.message }, 'AI Service request timeout in compareModels');
+      throw new ServiceUnavailableError('Dịch vụ AI phản hồi quá thời gian chờ (timeout)');
+    }
+
+    if (error.response) {
+      const { status, data } = error.response;
+      const errorCode = data?.error?.code;
+      const errorMessage = data?.error?.message;
+
+      logger.warn({ status, errorCode, errorMessage }, 'AI Service compareModels returned error');
+
+      if (errorCode === 'FACE_NOT_DETECTED') {
+        throw new BadRequestError(
+          errorMessage || 'Không phát hiện được khuôn mặt trong ảnh để so sánh',
+          'FACE_NOT_DETECTED'
+        );
+      }
+      if (errorCode === 'INVALID_IMAGE') {
+        throw new BadRequestError(errorMessage || 'File ảnh không hợp lệ', 'VALIDATION_ERROR');
+      }
+      if (status >= 500) {
+        throw new InternalError('Lỗi xử lý nội bộ từ AI Service khi so sánh mô hình');
+      }
+    }
+
+    if (error.isOperational) {
+      throw error;
+    }
+    logger.error({ err: error }, 'AI Service compareModels unexpected error');
+    throw new InternalError('Lỗi điều phối so sánh hai mô hình AI');
+  }
+};
+
