@@ -8,6 +8,19 @@ import * as checkoutService from './checkout.service.js';
  */
 
 /**
+ * GET /api/checkout/:bookingId/preview
+ * Lấy thông tin xem trước hóa đơn và chi phí tạm tính khi check-out.
+ */
+export const previewCheckout = asyncHandler(async (req, res) => {
+  const result = await checkoutService.getCheckoutPreview(
+    req.params.bookingId,
+    req.query
+  );
+
+  sendSuccess(res, result, 'Lấy thông tin preview check-out thành công');
+});
+
+/**
  * POST /api/checkout/:bookingId
  * Check-out, tính toán hóa đơn, thanh toán và chuyển trạng thái phòng.
  */

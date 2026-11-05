@@ -9,6 +9,7 @@ import {
   Eye,
   FileText,
   CreditCard,
+  LogOut,
 } from 'lucide-react';
 import { Card } from '@components/ui/Card';
 import { Badge } from '@components/ui/Badge';
@@ -176,6 +177,21 @@ export function BookingCard({ booking, onCancel }: BookingCardProps) {
               >
                 <CreditCard className="mr-1.5 h-3.5 w-3.5" />
                 Thanh toán ngay
+              </Button>
+            </Link>
+          )}
+
+          {/* Nút Trả phòng (Check-out) cho booking đang checked_in */}
+          {booking.status === 'checked_in' && (
+            <Link to={`/checkout/${booking.id}`}>
+              <Button
+                variant="primary"
+                size="sm"
+                type="button"
+                className="bg-amber-600 hover:bg-amber-700 text-white font-semibold"
+              >
+                <LogOut className="mr-1.5 h-3.5 w-3.5" />
+                Trả phòng
               </Button>
             </Link>
           )}

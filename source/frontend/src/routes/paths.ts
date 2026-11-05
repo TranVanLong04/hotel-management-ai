@@ -23,6 +23,7 @@ export const PATHS = {
   // === Staff (role: staff hoặc admin) ===
   STAFF_CHECKIN: '/staff/checkin',
   STAFF_CHECKOUT: '/staff/checkout',
+  CHECKOUT: '/checkout/:bookingId',
   STAFF_BOOKINGS: '/staff/bookings',
 
   // === Admin (role: admin) ===

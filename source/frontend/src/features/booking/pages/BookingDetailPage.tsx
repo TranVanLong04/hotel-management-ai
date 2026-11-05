@@ -339,6 +339,14 @@ export function BookingDetailPage() {
 
       {/* Thao tác chuyển tiếp */}
       <div className="flex flex-wrap items-center justify-end gap-3 pt-4">
+        {booking.status === 'checked_in' && (
+          <Link to={`/checkout/${booking.id}`}>
+            <Button variant="primary" size="md" className="font-bold bg-amber-600 hover:bg-amber-700 text-white">
+              <CreditCard className="mr-2 h-4 w-4" />
+              Trả phòng (Check-out)
+            </Button>
+          </Link>
+        )}
         {booking.status === 'pending_payment' && (
           <Link to={PATHS.PAYMENT.replace(':bookingId', booking.id)}>
             <Button variant="primary" size="md" className="font-bold">

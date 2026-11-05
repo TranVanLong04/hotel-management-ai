@@ -19,6 +19,7 @@ import { FaceRegisterPage } from '@/features/face/pages/FaceRegisterPage';
 import { ProfilePage } from '@/features/profile/pages/ProfilePage';
 import { AdminDashboardPage } from '@/pages/AdminDashboardPage';
 import { CheckinPage } from '@/features/checkin/pages/CheckinPage';
+import { CheckoutPage } from '@/features/checkout/pages/CheckoutPage';
 import { AiComparisonPage } from '@/features/ai-comparison/pages/AiComparisonPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { ForbiddenPage } from '@/pages/ForbiddenPage';
@@ -202,6 +203,10 @@ export const router = createBrowserRouter([
           {
             path: PATHS.STAFF_CHECKIN,
             element: <CheckinPage />,
+          },
+          {
+            path: PATHS.CHECKOUT,
+            element: <CheckoutPage />,
           },
           {
             path: PATHS.STAFF_CHECKOUT,

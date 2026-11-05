@@ -120,6 +120,52 @@ export const createInvoice = async (invoiceData) => {
  * @param {string} invoiceId - UUID
  * @returns {Promise<void>}
  */
+/**
+ * Lấy danh sách chi tiết dịch vụ đã sử dụng cho 1 booking (kèm tên và đơn vị dịch vụ).
+ * @param {string} bookingId - UUID
+ * @returns {Promise<Object[]>}
+ */
+export const getServiceUsagesWithDetails = async (bookingId) => {
+  const { data, error } = await supabaseAdmin
+    .from('service_usages')
+    .select('id, booking_id, service_id, quantity, unit_price, total_amount, note, used_at, services(id, name, unit)')
+    .eq('booking_id', bookingId)
+    .order('used_at', { ascending: false });
+
+  if (error) {
+    logger.error({ err: error, bookingId }, 'CheckoutRepository: getServiceUsagesWithDetails failed');
+    throw new InternalError('Lỗi truy vấn chi tiết dịch vụ');
+  }
+
+  return (data || []).map((item) => ({
+    id: item.id,
+    service_id: item.service_id,
+    service_name: item.services?.name || 'Dịch vụ',
+    unit: item.services?.unit || '',
+    quantity: item.quantity,
+    unit_price: Number(item.unit_price || 0),
+    total_amount: Number(item.total_amount || 0),
+    note: item.note,
+    used_at: item.used_at,
+  }));
+};
+
+/**
+ * Xóa danh sách thanh toán theo invoice_id (dùng rollback khi gặp lỗi).
+ * @param {string} invoiceId - UUID
+ * @returns {Promise<void>}
+ */
+export const deletePaymentsByInvoiceId = async (invoiceId) => {
+  const { error } = await supabaseAdmin
+    .from('payments')
+    .delete()
+    .eq('invoice_id', invoiceId);
+
+  if (error) {
+    logger.error({ err: error, invoiceId }, 'CheckoutRepository: deletePaymentsByInvoiceId rollback failed');
+  }
+};
+
 export const deleteInvoice = async (invoiceId) => {
   const { error } = await supabaseAdmin
     .from('invoices')

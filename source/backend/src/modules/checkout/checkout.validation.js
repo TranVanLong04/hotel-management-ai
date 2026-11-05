@@ -30,6 +30,28 @@ const paymentItemSchema = z.object({
     .optional(),
 });
 
+// === Params & Query cho GET /api/checkout/:bookingId/preview ===
+export const checkoutPreviewSchema = {
+  params: z.object({
+    bookingId: z
+      .string({ required_error: 'bookingId là bắt buộc' })
+      .uuid('bookingId phải là UUID hợp lệ'),
+  }),
+  query: z
+    .object({
+      discount_amount: z.coerce
+        .number()
+        .min(0, 'Số tiền giảm giá không được âm')
+        .default(0),
+      tax_rate: z.coerce
+        .number()
+        .min(0, 'Thuế suất không được nhỏ hơn 0')
+        .max(1, 'Thuế suất không được lớn hơn 1 (100%)')
+        .default(0.08),
+    })
+    .optional(),
+};
+
 // === Params & Body cho POST /api/checkout/:bookingId ===
 export const checkoutSchema = {
   params: z.object({
