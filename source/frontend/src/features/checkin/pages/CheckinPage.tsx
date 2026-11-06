@@ -188,7 +188,7 @@ export const CheckinPage: React.FC = () => {
         <div className="pt-6 border-t border-gray-100 dark:border-gray-800/60 flex flex-wrap items-center justify-between gap-4 text-xs text-gray-400 dark:text-gray-500">
           <div className="flex items-center gap-1.5">
             <ShieldCheck className="w-4 h-4 text-emerald-500" />
-            <span>Tiêu chuẩn bảo mật: Mã hóa vector pgvector 512D &bull; Ngưỡng tương đồng Cosine &ge; 0.75</span>
+            <span>Tiêu chuẩn bảo mật: Mã hóa vector pgvector 512D &bull; Ngưỡng tương đồng Cosine &ge; 0.55</span>
           </div>
           <div className="flex items-center gap-1.5">
             <UserCheck className="w-4 h-4 text-indigo-400" />

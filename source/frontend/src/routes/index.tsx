@@ -210,7 +210,7 @@ export const router = createBrowserRouter([
           },
           {
             path: PATHS.STAFF_CHECKOUT,
-            element: <AdminDashboardPage />,
+            element: <CheckoutPage />,
           },
           {
             path: PATHS.STAFF_BOOKINGS,

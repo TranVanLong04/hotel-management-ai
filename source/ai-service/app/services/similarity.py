@@ -6,7 +6,7 @@ from fastapi import HTTPException
 def calculate_similarity(
     embedding1: List[float],
     embedding2: List[float],
-    threshold: float = 0.75,
+    threshold: float = 0.55,
 ) -> Dict[str, Any]:
     """
     Tính độ tương đồng Cosine Similarity giữa 2 vector embedding và so sánh với threshold.

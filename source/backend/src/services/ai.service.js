@@ -112,10 +112,10 @@ export const embedFace = async (buffer, filename = 'face.jpg') => {
  *
  * @param {number[]} emb1 - Embedding 1 (512 floats)
  * @param {number[]} emb2 - Embedding 2 (512 floats)
- * @param {number} [threshold=0.75] - Ngưỡng match
+ * @param {number} [threshold=0.55] - Ngưỡng match
  * @returns {Promise<{ match: boolean, score: number, threshold: number }>}
  */
-export const compareFaces = async (emb1, emb2, threshold = 0.75) => {
+export const compareFaces = async (emb1, emb2, threshold = 0.55) => {
   try {
     const response = await aiClient.post('/compare', {
       embedding1: emb1,
@@ -169,8 +169,8 @@ export const compareModels = async (
   buffer1,
   buffer2,
   {
-    thresholdFacenet = 0.70,
-    thresholdInsightface = 0.75,
+    thresholdFacenet = 0.75,
+    thresholdInsightface = 0.55,
     filename1 = 'image1.jpg',
     filename2 = 'image2.jpg',
   } = {}

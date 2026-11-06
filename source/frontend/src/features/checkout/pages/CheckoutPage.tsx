@@ -8,13 +8,11 @@ import {
   Calendar,
   AlertCircle,
   Home,
-  Receipt,
-  Search,
   User,
   Phone,
   LogOut,
-  Clock,
   Sparkles,
+  RotateCcw,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Button } from '@components/ui/Button';
@@ -25,13 +23,16 @@ import { Loading } from '@components/feedback/Loading';
 import { formatCurrency, formatDate } from '@utils/format';
 import { PATHS } from '@routes/paths';
 import { bookingApi } from '@/api/booking.api';
-import type { Booking } from '@/types';
-import {
-  checkoutApi,
-  type CheckoutPreviewData,
-  type PaymentItemPayload,
-  type CheckoutResponseData,
-} from '../checkoutApi';
+import { checkoutApi } from '@/api/checkout.api';
+import type {
+  Booking,
+  CheckoutPreviewData,
+  PaymentItemPayload,
+  CheckoutResponseData,
+  CalculatedFinancials,
+} from '@/types';
+import { BookingSearch } from '@/features/checkin/components/BookingSearch';
+import { BookingInfoCard } from '@/features/checkin/components/BookingInfoCard';
 import { InvoicePreview } from '../components/InvoicePreview';
 import { PaymentForm } from '../components/PaymentForm';
 
@@ -39,12 +40,12 @@ export const CheckoutPage: React.FC = () => {
   const { bookingId: paramBookingId } = useParams<{ bookingId?: string }>();
   const navigate = useNavigate();
 
-  // Active booking ID (từ URL param hoặc khi chọn từ danh sách)
+  // Active booking ID (từ URL param hoặc khi chọn từ danh sách / tìm kiếm)
   const [selectedBookingId, setSelectedBookingId] = useState<string | null>(
     paramBookingId || null
   );
 
-  // State cho danh sách phòng đang checked-in (khi không có paramBookingId)
+  // State cho danh sách phòng đang checked-in (khi chưa chọn booking)
   const [activeBookings, setActiveBookings] = useState<Booking[]>([]);
   const [loadingActiveBookings, setLoadingActiveBookings] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -56,16 +57,17 @@ export const CheckoutPage: React.FC = () => {
 
   // Form states
   const [discountAmount, setDiscountAmount] = useState<number>(0);
-  const [taxRate, setTaxRate] = useState<number>(0.08); // 8% VAT
+  const [taxRate, setTaxRate] = useState<number>(0.08); // 8% VAT mặc định
   const [checkoutNote, setCheckoutNote] = useState<string>('');
   const [payments, setPayments] = useState<PaymentItemPayload[]>([]);
+  const [financials, setFinancials] = useState<CalculatedFinancials | null>(null);
 
   // Trạng thái submit & modal thành công
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successResult, setSuccessResult] = useState<CheckoutResponseData | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
-  // Cập nhật selectedBookingId khi param thay đổi
+  // Cập nhật selectedBookingId khi param URL thay đổi
   useEffect(() => {
     if (paramBookingId) {
       setSelectedBookingId(paramBookingId);
@@ -110,7 +112,7 @@ export const CheckoutPage: React.FC = () => {
           setPreviewData(data);
           setError(null);
 
-          // Khởi tạo 1 khoản thanh toán mặc định bằng đúng số tiền tổng cộng
+          // Khởi tạo 1 khoản thanh toán mặc định bằng số tiền tổng cộng ban đầu
           const initialTotal = data.summary?.total_amount || 0;
           setPayments([
             {
@@ -142,6 +144,23 @@ export const CheckoutPage: React.FC = () => {
     };
   }, [selectedBookingId]);
 
+  // Nhận kết quả tính toán từ InvoicePreview
+  const handleFinancialsCalculated = (calc: CalculatedFinancials) => {
+    setFinancials(calc);
+  };
+
+  // Reset về màn hình tra cứu
+  const handleResetBooking = () => {
+    setSelectedBookingId(null);
+    setPreviewData(null);
+    setError(null);
+    setDiscountAmount(0);
+    setTaxRate(0.08);
+    setCheckoutNote('');
+    setPayments([]);
+    navigate(PATHS.STAFF_CHECKOUT, { replace: true });
+  };
+
   // Xử lý xác nhận trả phòng & xuất hóa đơn
   const handleConfirmCheckout = async () => {
     if (!selectedBookingId || !previewData) return;
@@ -151,16 +170,20 @@ export const CheckoutPage: React.FC = () => {
       return;
     }
 
-    for (const p of payments) {
-      if (Number(p.amount) <= 0) {
-        toast.error('Số tiền thanh toán phải lớn hơn 0');
-        return;
-      }
+    const currentTotal = financials?.total_amount ?? previewData.summary.total_amount;
+    const totalPaid = payments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+
+    // Chặn khi thanh toán vượt quá hóa đơn
+    if (totalPaid > currentTotal + 0.01) {
+      toast.error(
+        `Tổng thanh toán (${formatCurrency(totalPaid)}) vượt quá số tiền hóa đơn (${formatCurrency(currentTotal)})`
+      );
+      return;
     }
 
     setIsSubmitting(true);
     try {
-      const res = await checkoutApi.confirmCheckout(selectedBookingId, {
+      const res = await checkoutApi.checkout(selectedBookingId, {
         discount_amount: discountAmount,
         tax_rate: taxRate,
         payments,
@@ -186,7 +209,7 @@ export const CheckoutPage: React.FC = () => {
     window.print();
   };
 
-  // Lọc danh sách booking checked-in theo từ khóa tìm kiếm
+  // Lọc danh sách booking checked-in theo từ khóa
   const filteredActiveBookings = activeBookings.filter((b) => {
     const q = searchQuery.toLowerCase().trim();
     if (!q) return true;
@@ -202,126 +225,157 @@ export const CheckoutPage: React.FC = () => {
     );
   });
 
-  // ========== MÀN HÌNH 1: DANH SÁCH & TÌM KIẾM ĐƠN CHECKED-IN (khi chưa chọn booking) ==========
+  // ========== MÀN HÌNH 1: TRA CỨU & DANH SÁCH PHÒNG LƯU TRÚ (khi chưa chọn booking) ==========
   if (!selectedBookingId) {
     return (
       <div className="min-h-screen bg-gray-50/50 py-8 px-4 sm:px-6 lg:px-8 dark:bg-gray-900 transition-colors">
-        <div className="max-w-5xl mx-auto space-y-6">
+        <div className="max-w-5xl mx-auto space-y-8">
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-gray-200 dark:border-gray-800">
             <div>
-              <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white font-display">
-                Danh sách phòng đang lưu trú (Check-out)
-              </h1>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                Chọn phòng hoặc tìm kiếm mã đơn để tiến hành thanh toán và trả phòng
-              </p>
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                  <LogOut className="w-5 h-5" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white font-display">
+                    Lễ tân Trả phòng (Check-out)
+                  </h1>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                    Đối soát tiền phòng, dịch vụ phát sinh, giảm giá và xuất hóa đơn
+                  </p>
+                </div>
+              </div>
             </div>
             <Link to={PATHS.STAFF_CHECKIN}>
               <Button variant="outline" size="sm" className="gap-1.5">
-                <Sparkles className="h-4 w-4 text-primary-500" />
+                <Sparkles className="h-4 w-4 text-indigo-500" />
                 Đến trang Check-in AI
               </Button>
             </Link>
           </div>
 
-          {/* Ô tìm kiếm */}
-          <div className="relative">
-            <Search className="h-5 w-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Tìm theo số phòng, mã đặt phòng (BK...), tên khách hoặc số điện thoại..."
-              className="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-            />
+          {/* Ô Tra cứu theo mã đặt phòng từ component BookingSearch */}
+          <BookingSearch
+            allowedStatuses={['checked_in']}
+            title="Tra cứu đơn đặt phòng cần Check-out"
+            description="Nhập mã đặt phòng (Booking Code) của khách đang lưu trú để thanh toán và trả phòng"
+            placeholder="VD: BK20261020001 hoặc số điện thoại..."
+            onFound={(found) => {
+              setSelectedBookingId(found.id);
+              navigate(`/checkout/${found.id}`);
+            }}
+          />
+
+          {/* Danh sách phòng đang lưu trú */}
+          <div className="space-y-4 pt-4 border-t border-gray-200 dark:border-gray-800">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                  Danh sách phòng đang ở ({activeBookings.length})
+                </h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Chọn nhanh phòng khách yêu cầu trả phòng trực tiếp
+                </p>
+              </div>
+
+              {/* Ô lọc nhanh danh sách */}
+              <div className="w-full sm:w-72">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Lọc số phòng, tên khách..."
+                  className="w-full px-3.5 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-xs text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                />
+              </div>
+            </div>
+
+            {loadingActiveBookings ? (
+              <div className="py-16">
+                <Loading fullScreen={false} size="md" />
+              </div>
+            ) : filteredActiveBookings.length === 0 ? (
+              <Card className="p-12 text-center border-dashed border-gray-300 dark:border-gray-700">
+                <DoorOpen className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+                <h4 className="text-base font-bold text-gray-900 dark:text-white">
+                  Không có phòng nào đang lưu trú
+                </h4>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Hiện tại không có đơn đặt phòng nào ở trạng thái checked_in phù hợp với bộ lọc.
+                </p>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {filteredActiveBookings.map((b) => {
+                  const roomNum = b.rooms?.room_number || b.room?.room_number || '---';
+                  const roomType =
+                    b.rooms?.room_types?.name || b.room?.room_type?.name || 'Tiêu chuẩn';
+                  const custName =
+                    b.customers?.full_name || b.customer?.full_name || 'Khách vãng lai';
+                  const phone = b.customers?.phone || b.customer?.phone || '---';
+
+                  return (
+                    <Card
+                      key={b.id}
+                      className="p-5 border border-gray-200 hover:border-amber-400 dark:border-gray-800 dark:hover:border-amber-600 transition-all flex flex-col justify-between space-y-4"
+                    >
+                      <div>
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <span className="text-xs font-mono font-bold text-amber-600 dark:text-amber-400">
+                              #{b.booking_code}
+                            </span>
+                            <h4 className="text-lg font-bold text-gray-900 dark:text-white mt-0.5">
+                              Phòng {roomNum} — {roomType}
+                            </h4>
+                          </div>
+                          <Badge variant="success">Đang ở</Badge>
+                        </div>
+
+                        <div className="mt-3 space-y-1.5 text-xs text-gray-600 dark:text-gray-400">
+                          <div className="flex items-center gap-2">
+                            <User className="h-3.5 w-3.5 text-gray-400" />
+                            <span className="font-medium text-gray-900 dark:text-white">
+                              {custName}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Phone className="h-3.5 w-3.5 text-gray-400" />
+                            <span>{phone}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Calendar className="h-3.5 w-3.5 text-gray-400" />
+                            <span>
+                              {formatDate(b.check_in_date)} ➔ {formatDate(b.check_out_date)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="pt-3 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                        <span className="text-xs text-gray-500">
+                          Tiền phòng: <strong>{formatCurrency(b.room_subtotal || b.room_price || 0)}</strong>
+                        </span>
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedBookingId(b.id);
+                            navigate(`/checkout/${b.id}`);
+                          }}
+                          className="bg-amber-600 hover:bg-amber-700 text-white font-semibold gap-1.5"
+                        >
+                          <LogOut className="h-3.5 w-3.5" />
+                          Làm thủ tục Trả phòng
+                        </Button>
+                      </div>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
           </div>
-
-          {/* Danh sách phòng */}
-          {loadingActiveBookings ? (
-            <div className="py-16">
-              <Loading fullScreen={false} size="md" />
-            </div>
-          ) : filteredActiveBookings.length === 0 ? (
-            <Card className="p-12 text-center border-dashed border-gray-300 dark:border-gray-700">
-              <DoorOpen className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
-              <h3 className="text-base font-bold text-gray-900 dark:text-white">
-                Không có phòng nào đang ở phù hợp
-              </h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                Hiện tại không có đơn đặt phòng nào ở trạng thái đã check-in khớp với từ khóa tìm kiếm.
-              </p>
-            </Card>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {filteredActiveBookings.map((b) => {
-                const roomNum = b.rooms?.room_number || b.room?.room_number || '---';
-                const roomType =
-                  b.rooms?.room_types?.name || b.room?.room_type?.name || 'Tiêu chuẩn';
-                const custName =
-                  b.customers?.full_name || b.customer?.full_name || 'Khách vãng lai';
-                const phone = b.customers?.phone || b.customer?.phone || '---';
-
-                return (
-                  <Card
-                    key={b.id}
-                    className="p-5 border border-gray-200 hover:border-primary-300 dark:border-gray-800 dark:hover:border-primary-700 transition-all flex flex-col justify-between space-y-4"
-                  >
-                    <div>
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <span className="text-xs font-mono font-bold text-primary-600 dark:text-primary-400">
-                            {b.booking_code}
-                          </span>
-                          <h4 className="text-lg font-bold text-gray-900 dark:text-white mt-0.5">
-                            Phòng {roomNum} — {roomType}
-                          </h4>
-                        </div>
-                        <Badge variant="success">Đang ở</Badge>
-                      </div>
-
-                      <div className="mt-3 space-y-1.5 text-xs text-gray-600 dark:text-gray-400">
-                        <div className="flex items-center gap-2">
-                          <User className="h-3.5 w-3.5 text-gray-400" />
-                          <span className="font-medium text-gray-900 dark:text-white">
-                            {custName}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Phone className="h-3.5 w-3.5 text-gray-400" />
-                          <span>{phone}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-3.5 w-3.5 text-gray-400" />
-                          <span>
-                            {formatDate(b.check_in_date)} ➔ {formatDate(b.check_out_date)}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="pt-3 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
-                      <span className="text-xs text-gray-500">
-                        Tiền phòng: <strong>{formatCurrency(b.room_subtotal)}</strong>
-                      </span>
-                      <Button
-                        variant="primary"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedBookingId(b.id);
-                          navigate(`/checkout/${b.id}`);
-                        }}
-                        className="bg-amber-600 hover:bg-amber-700 text-white font-semibold gap-1.5"
-                      >
-                        <LogOut className="h-3.5 w-3.5" />
-                        Làm thủ tục Trả phòng
-                      </Button>
-                    </div>
-                  </Card>
-                );
-              })}
-            </div>
-          )}
         </div>
       </div>
     );
@@ -351,16 +405,13 @@ export const CheckoutPage: React.FC = () => {
         <div className="mt-6 flex justify-center gap-3">
           <Button
             variant="outline"
-            onClick={() => {
-              setSelectedBookingId(null);
-              navigate(PATHS.STAFF_CHECKOUT);
-            }}
+            onClick={handleResetBooking}
           >
             <ArrowLeft className="mr-1.5 h-4 w-4" />
-            Xem danh sách phòng
+            Quay lại danh sách phòng
           </Button>
           <Link to={PATHS.STAFF_CHECKIN}>
-            <Button variant="primary">Trang Lễ tân</Button>
+            <Button variant="primary">Trang Lễ tân Check-in</Button>
           </Link>
         </div>
       </div>
@@ -377,11 +428,8 @@ export const CheckoutPage: React.FC = () => {
           <div className="flex items-center gap-3">
             <button
               type="button"
-              onClick={() => {
-                setSelectedBookingId(null);
-                navigate(PATHS.STAFF_CHECKOUT);
-              }}
-              className="rounded-xl border border-gray-200 p-2 text-gray-500 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800"
+              onClick={handleResetBooking}
+              className="rounded-xl border border-gray-200 p-2 text-gray-500 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800 transition"
               title="Quay lại danh sách"
             >
               <ArrowLeft className="h-5 w-5" />
@@ -396,24 +444,42 @@ export const CheckoutPage: React.FC = () => {
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 Phòng{' '}
                 <strong className="text-gray-800 dark:text-gray-200">
-                  {booking.room?.room_number}
+                  {booking.rooms?.room_number || booking.room?.room_number}
                 </strong>{' '}
                 • Đặt phòng{' '}
-                <span className="font-mono font-semibold">{booking.booking_code}</span> • Khách hàng:{' '}
-                <strong>{booking.customer?.full_name}</strong>
+                <span className="font-mono font-semibold">#{booking.booking_code}</span> • Khách hàng:{' '}
+                <strong>
+                  {booking.customers?.full_name || booking.customer?.full_name}
+                </strong>
               </p>
             </div>
           </div>
+
+          <button
+            onClick={handleResetBooking}
+            className="inline-flex items-center gap-2 px-4 py-2 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl text-xs font-semibold shadow-sm transition"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>Đổi đơn đặt phòng</span>
+          </button>
         </div>
+
+        {/* Tóm tắt BookingInfoCard tái sử dụng từ Phase 7 */}
+        <BookingInfoCard
+          booking={booking}
+          onResetBooking={handleResetBooking}
+        />
 
         {/* Nội dung chính: 2 Cột */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 items-start">
           {/* Cột trái: Chi tiết hóa đơn Breakdown (7 Cột) */}
           <div className="lg:col-span-7 space-y-6">
             <InvoicePreview
-              previewData={previewData}
+              booking={booking}
+              services={previewData.services}
               discountAmount={discountAmount}
               taxRate={taxRate}
+              onCalculated={handleFinancialsCalculated}
             />
 
             {/* Ghi chú khi check-out */}
@@ -426,7 +492,7 @@ export const CheckoutPage: React.FC = () => {
                 value={checkoutNote}
                 onChange={(e) => setCheckoutNote(e.target.value)}
                 placeholder="Nhập ghi chú tình trạng phòng khi trả, yêu cầu đặc biệt của khách (nếu có)..."
-                className="w-full rounded-xl border border-gray-300 bg-white p-3 text-xs text-gray-900 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                className="w-full rounded-xl border border-gray-300 bg-white p-3 text-xs text-gray-900 focus:border-amber-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white"
               />
             </div>
           </div>
@@ -434,7 +500,7 @@ export const CheckoutPage: React.FC = () => {
           {/* Cột phải: Form thanh toán (5 Cột) */}
           <div className="lg:col-span-5">
             <PaymentForm
-              roomAmount={Number(booking.room_subtotal || 0)}
+              roomAmount={Number(booking.room_subtotal || booking.room_price || 0)}
               serviceAmount={previewData.services.reduce(
                 (sum, s) => sum + Number(s.total_amount || 0),
                 0
@@ -454,7 +520,7 @@ export const CheckoutPage: React.FC = () => {
 
       {/* MODAL THÀNH CÔNG & IN HÓA ĐƠN */}
       <Modal
-        isOpen={showSuccessModal}
+        open={showSuccessModal}
         onClose={() => setShowSuccessModal(false)}
         title="Check-out & Xuất Hóa đơn thành công"
         size="lg"
@@ -473,7 +539,7 @@ export const CheckoutPage: React.FC = () => {
               <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                 Phòng{' '}
                 <strong className="text-gray-800 dark:text-gray-200">
-                  {booking.room?.room_number}
+                  {booking.rooms?.room_number || booking.room?.room_number}
                 </strong>{' '}
                 đã được chuyển sang trạng thái <strong>Dọn dẹp (Cleaning)</strong>.
               </p>
@@ -483,8 +549,8 @@ export const CheckoutPage: React.FC = () => {
             <div className="rounded-xl border border-gray-200 bg-gray-50/80 p-5 text-left text-xs space-y-3 dark:border-gray-800 dark:bg-gray-800/50">
               <div className="flex justify-between items-center pb-2 border-b border-gray-200 dark:border-gray-700">
                 <span className="text-gray-500">Mã hóa đơn:</span>
-                <span className="font-mono text-sm font-bold text-primary-600 dark:text-primary-400">
-                  {successResult.invoice.invoice_code}
+                <span className="font-mono text-sm font-bold text-amber-600 dark:text-amber-400">
+                  #{successResult.invoice.invoice_code}
                 </span>
               </div>
 
@@ -531,10 +597,9 @@ export const CheckoutPage: React.FC = () => {
                 variant="primary"
                 onClick={() => {
                   setShowSuccessModal(false);
-                  setSelectedBookingId(null);
-                  navigate(PATHS.STAFF_CHECKOUT);
+                  handleResetBooking();
                 }}
-                className="gap-2"
+                className="gap-2 bg-amber-600 hover:bg-amber-700 text-white font-semibold"
               >
                 <Home className="h-4 w-4" />
                 Về danh sách phòng
@@ -546,4 +611,5 @@ export const CheckoutPage: React.FC = () => {
     </div>
   );
 };
+
 export default CheckoutPage;

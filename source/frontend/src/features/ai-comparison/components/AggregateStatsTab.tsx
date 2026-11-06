@@ -311,7 +311,7 @@ export function AggregateStatsTab() {
                   </div>
                 </div>
                 <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-bold text-blue-800 dark:bg-blue-950/60 dark:text-blue-300">
-                  Threshold: 0.70
+                  Threshold: 0.75
                 </span>
               </div>
 
@@ -376,7 +376,7 @@ export function AggregateStatsTab() {
                   </div>
                 </div>
                 <span className="rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-bold text-purple-800 dark:bg-purple-950/60 dark:text-purple-300">
-                  Threshold: 0.75
+                  Threshold: 0.55
                 </span>
               </div>
 
@@ -590,8 +590,8 @@ export function AggregateStatsTab() {
                     <tr>
                       <th className="px-4 py-3">Ảnh & Đối tượng</th>
                       <th className="px-4 py-3">Ground Truth</th>
-                      <th className="px-4 py-3">FaceNet (0.70)</th>
-                      <th className="px-4 py-3">InsightFace (0.75)</th>
+                      <th className="px-4 py-3">FaceNet (0.75)</th>
+                      <th className="px-4 py-3">InsightFace (0.55)</th>
                       <th className="px-4 py-3">Độ chênh lệch (Δ)</th>
                       <th className="px-4 py-3">Phân loại sai lệch</th>
                     </tr>

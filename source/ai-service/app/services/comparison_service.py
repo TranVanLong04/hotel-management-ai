@@ -177,8 +177,8 @@ def run_insightface_branch(
 async def compare_both_models_concurrently(
     img1_bytes: bytes,
     img2_bytes: bytes,
-    threshold_facenet: float = 0.70,
-    threshold_insightface: float = 0.75,
+    threshold_facenet: float = 0.75,
+    threshold_insightface: float = 0.55,
 ) -> Dict[str, Any]:
     """
     Điều phối chạy song song FaceNet và InsightFace trên cùng một cặp ảnh:

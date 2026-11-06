@@ -414,7 +414,7 @@ export function FaceComparisonTab() {
                   onChange={(e) => setThresholdFacenet(parseFloat(e.target.value))}
                   className="mt-2 h-2 w-full cursor-pointer accent-blue-600"
                 />
-                <span className="text-[10px] text-gray-400">Mặc định: 0.70</span>
+                <span className="text-[10px] text-gray-400">Mặc định: 0.75</span>
               </div>
 
               {/* Threshold InsightFace */}
@@ -436,7 +436,7 @@ export function FaceComparisonTab() {
                   onChange={(e) => setThresholdInsightface(parseFloat(e.target.value))}
                   className="mt-2 h-2 w-full cursor-pointer accent-purple-600"
                 />
-                <span className="text-[10px] text-gray-400">Mặc định: 0.75</span>
+                <span className="text-[10px] text-gray-400">Mặc định: 0.55</span>
               </div>
             </div>
 

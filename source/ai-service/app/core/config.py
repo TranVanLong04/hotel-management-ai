@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     # AI Model Settings
     MODEL_NAME: str = "buffalo_l"
     MODEL_ROOT: str = "D:/insightface_models"
-    FACE_THRESHOLD: float = 0.75
+    FACE_THRESHOLD: float = 0.55
 
     # Auth API Key
     API_KEY: str = "dev-key-12345"

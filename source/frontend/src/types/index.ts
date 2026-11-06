@@ -377,4 +377,5 @@ export interface PaymentCallbackResult {
 export * from './face';
 export * from './customer';
 export * from './aiComparison';
+export * from './checkout';
 

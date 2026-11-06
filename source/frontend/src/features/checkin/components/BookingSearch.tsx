@@ -1,15 +1,26 @@
 import React, { useState } from 'react';
 import { Search, Loader2, QrCode, AlertCircle } from 'lucide-react';
 import { bookingApi } from '@/api/booking.api';
-import type { Booking } from '@/types';
+import type { Booking, BookingStatus } from '@/types';
 import toast from 'react-hot-toast';
 
 interface BookingSearchProps {
   onFound: (booking: Booking) => void;
   isLoading?: boolean;
+  allowedStatuses?: BookingStatus[];
+  title?: string;
+  description?: string;
+  placeholder?: string;
 }
 
-export const BookingSearch: React.FC<BookingSearchProps> = ({ onFound, isLoading = false }) => {
+export const BookingSearch: React.FC<BookingSearchProps> = ({
+  onFound,
+  isLoading = false,
+  allowedStatuses = ['confirmed'],
+  title = 'Tra cứu Đơn đặt phòng Check-in',
+  description = 'Nhập mã đặt phòng (Booking Code) của khách hàng để bắt đầu nhận diện AI',
+  placeholder = 'VD: BK20261020001 hoặc số điện thoại khách',
+}) => {
   const [bookingCode, setBookingCode] = useState('');
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
@@ -37,31 +48,39 @@ export const BookingSearch: React.FC<BookingSearchProps> = ({ onFound, isLoading
         return;
       }
 
-      // Kiểm tra trạng thái booking
-      if (foundBooking.status === 'checked_in') {
-        setSearchError('Đơn đặt phòng này đã được thực hiện Check-in trước đó.');
-        toast.error('Khách đã check-in');
-        setSearching(false);
-        return;
-      }
-
-      if (foundBooking.status === 'checked_out') {
-        setSearchError('Đơn đặt phòng này đã hoàn tất Check-out.');
-        toast.error('Khách đã check-out');
-        setSearching(false);
-        return;
-      }
-
-      if (foundBooking.status === 'cancelled') {
-        setSearchError('Đơn đặt phòng này đã bị hủy.');
-        toast.error('Đơn đặt phòng đã bị hủy');
-        setSearching(false);
-        return;
-      }
-
-      if (foundBooking.status !== 'confirmed') {
-        setSearchError(`Đơn đặt phòng đang ở trạng thái "${foundBooking.status}". Chỉ có thể check-in đơn đã xác nhận (confirmed).`);
-        toast.error('Đơn đặt phòng chưa được xác nhận');
+      // Kiểm tra trạng thái booking theo allowedStatuses
+      if (!allowedStatuses.includes(foundBooking.status)) {
+        if (allowedStatuses.includes('checked_in')) {
+          // Ngữ cảnh Check-out
+          if (foundBooking.status === 'confirmed') {
+            setSearchError('Đơn đặt phòng chưa check-in. Vui lòng làm thủ tục check-in nhận phòng trước.');
+            toast.error('Khách chưa check-in');
+          } else if (foundBooking.status === 'checked_out') {
+            setSearchError('Đơn đặt phòng này đã hoàn tất Check-out trước đó.');
+            toast.error('Khách đã check-out');
+          } else if (foundBooking.status === 'cancelled') {
+            setSearchError('Đơn đặt phòng này đã bị hủy.');
+            toast.error('Đơn đặt phòng đã bị hủy');
+          } else {
+            setSearchError(`Đơn đặt phòng đang ở trạng thái "${foundBooking.status}". Chỉ có thể làm thủ tục cho đơn đang lưu trú (checked_in).`);
+            toast.error('Đơn không ở trạng thái lưu trú');
+          }
+        } else {
+          // Ngữ cảnh Check-in (mặc định)
+          if (foundBooking.status === 'checked_in') {
+            setSearchError('Đơn đặt phòng này đã được thực hiện Check-in trước đó.');
+            toast.error('Khách đã check-in');
+          } else if (foundBooking.status === 'checked_out') {
+            setSearchError('Đơn đặt phòng này đã hoàn tất Check-out.');
+            toast.error('Khách đã check-out');
+          } else if (foundBooking.status === 'cancelled') {
+            setSearchError('Đơn đặt phòng này đã bị hủy.');
+            toast.error('Đơn đặt phòng đã bị hủy');
+          } else {
+            setSearchError(`Đơn đặt phòng đang ở trạng thái "${foundBooking.status}". Chỉ có thể check-in đơn đã xác nhận (confirmed).`);
+            toast.error('Đơn đặt phòng chưa được xác nhận');
+          }
+        }
         setSearching(false);
         return;
       }
@@ -84,10 +103,10 @@ export const BookingSearch: React.FC<BookingSearchProps> = ({ onFound, isLoading
         </div>
         <div>
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-            Tra cứu Đơn đặt phòng Check-in
+            {title}
           </h2>
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            Nhập mã đặt phòng (Booking Code) của khách hàng để bắt đầu nhận diện AI
+            {description}
           </p>
         </div>
       </div>
@@ -101,7 +120,7 @@ export const BookingSearch: React.FC<BookingSearchProps> = ({ onFound, isLoading
               setBookingCode(e.target.value);
               if (searchError) setSearchError(null);
             }}
-            placeholder="VD: BK20261020001 hoặc số điện thoại khách"
+            placeholder={placeholder}
             className="w-full pl-12 pr-4 py-3.5 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:bg-white dark:focus:bg-gray-900 transition-all font-medium text-lg tracking-wide uppercase"
             disabled={searching || isLoading}
             autoFocus

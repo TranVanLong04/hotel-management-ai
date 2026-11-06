@@ -21,7 +21,7 @@ import {
  * Tham chiếu: docs/03-backend/phase7-checkin-checkout/README.md & docs/08-features/05-checkin-ai.md
  */
 
-const FACE_MATCH_THRESHOLD = 0.75;
+const FACE_MATCH_THRESHOLD = 0.55;
 
 /**
  * Helper ghi nhận lượt đối sánh vào mô-đun AI Model Comparison
@@ -31,7 +31,7 @@ const recordCheckinAiComparison = async (booking, faceProfile, similarity, isMat
     const custName = booking.customers?.full_name || 'Khách hàng';
     const faceImgUrl = faceProfile?.face_image_url || null;
     const fnSim = Number(Math.max(0.12, Math.min(0.98, similarity * 0.925 - 0.015)).toFixed(4));
-    const fnMatch = fnSim >= 0.70;
+    const fnMatch = fnSim >= 0.75;
     const isAgreement = fnMatch === isMatch;
 
     await aiCompRepo.createRecord({
@@ -46,7 +46,7 @@ const recordCheckinAiComparison = async (booking, faceProfile, similarity, isMat
       facenet_model: 'FaceNet (Inception-ResNet-v1)',
       facenet_checkpoint: 'InceptionResnetV1_vggface2',
       facenet_similarity: fnSim,
-      facenet_threshold: 0.70,
+      facenet_threshold: 0.75,
       facenet_is_match: fnMatch,
       facenet_inference_time_ms: 124.6,
       facenet_total_time_ms: 146.8,
@@ -54,7 +54,7 @@ const recordCheckinAiComparison = async (booking, faceProfile, similarity, isMat
       insightface_model: 'InsightFace (ArcFace buffalo_l)',
       insightface_checkpoint: 'w600k_r50_arcface',
       insightface_similarity: Number(similarity.toFixed(4)),
-      insightface_threshold: 0.75,
+      insightface_threshold: 0.55,
       insightface_is_match: isMatch,
       insightface_inference_time_ms: 66.4,
       insightface_total_time_ms: 81.2,

@@ -73,7 +73,7 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
             <span className="text-base font-bold text-emerald-600 dark:text-emerald-400">
               {similarityPercent}%
             </span>
-            <span className="text-xs text-gray-400 ml-1.5">(Ngưỡng: &ge; 75%)</span>
+            <span className="text-xs text-gray-400 ml-1.5">(Ngưỡng: &ge; 55%)</span>
           </div>
         )}
 
@@ -145,7 +145,7 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
         <div className="mt-3 inline-block px-4 py-1.5 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-xl text-sm">
           <span className="text-gray-500 dark:text-gray-400">Độ khớp: </span>
           <span className="font-bold text-red-600 dark:text-red-400">{similarityPercent}%</span>
-          <span className="text-xs text-gray-400 ml-1.5">(Yêu cầu: &ge; 75%)</span>
+          <span className="text-xs text-gray-400 ml-1.5">(Yêu cầu: &ge; 55%)</span>
         </div>
       )}
 

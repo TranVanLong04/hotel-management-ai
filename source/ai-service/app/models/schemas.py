@@ -47,7 +47,7 @@ class CompareRequest(BaseModel):
     """Yêu cầu so khớp giữa 2 vector embedding."""
     embedding1: List[float] = Field(..., description="Vector embedding thứ nhất (512 chiều)")
     embedding2: List[float] = Field(..., description="Vector embedding thứ hai (512 chiều)")
-    threshold: Optional[float] = Field(default=0.75, description="Ngưỡng so khớp (mặc định 0.75)")
+    threshold: Optional[float] = Field(default=0.55, description="Ngưỡng so khớp (mặc định 0.55)")
 
     @field_validator("embedding1", "embedding2")
     @classmethod
