@@ -1,5 +1,4 @@
 import * as invoicesRepo from './invoices.repository.js';
-import * as checkoutRepo from '../checkout/checkout.repository.js';
 import * as bookingsRepo from '../bookings/bookings.repository.js';
 import {
   NotFoundError,
@@ -58,7 +57,7 @@ export const getInvoice = async (id, user) => {
   if (user.role === USER_ROLES.CUSTOMER) {
     const customer = await bookingsRepo.findCustomerByUserId(user.sub);
     if (!customer || invoice.customer_id !== customer.id) {
-      throw new ForbiddenError('Không có quyền xem hóa đơn này');
+      throw new ForbiddenError('Không có quyền truy cập', 'RESOURCE_NOT_OWNED');
     }
   }
 
@@ -115,12 +114,12 @@ export const addPayment = async (invoiceId, paymentData, staffUserId) => {
     note: paymentData.note,
   });
 
-  // 6. Cập nhật trạng thái hóa đơn: tái sử dụng checkout.repository.js
+  // 6. Cập nhật trạng thái hóa đơn qua invoices.repository.js
   const newTotalPaid = totalPaid + paymentAmount;
   const newStatus =
     newTotalPaid >= totalAmount - 0.01 ? INVOICE_STATUSES.PAID : INVOICE_STATUSES.PARTIAL;
 
-  const updatedInvoice = await checkoutRepo.updateInvoiceStatus(invoiceId, newStatus);
+  const updatedInvoice = await invoicesRepo.updateStatus(invoiceId, newStatus);
 
   logger.info(
     {

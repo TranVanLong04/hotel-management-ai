@@ -55,8 +55,17 @@ export class ForbiddenError extends AppError {
 // === 404 Not Found — tự tạo code từ tên resource hoặc custom message/code ===
 export class NotFoundError extends AppError {
   constructor(resource = 'Resource', message = null, customCode = null) {
-    const code = customCode || `${resource.toUpperCase().replace(/\s+/g, '_')}_NOT_FOUND`;
-    super(code, message || `${resource} không tìm thấy`, 404);
+    let resolvedCode = customCode;
+    let resolvedMessage = message;
+
+    // Hỗ trợ truyền constructor(resource, customCode) nếu tham số thứ 2 là mã UPPER_SNAKE_CASE
+    if (typeof message === 'string' && /^[A-Z0-9_]+$/.test(message) && !customCode) {
+      resolvedCode = message;
+      resolvedMessage = `${resource} không tìm thấy`;
+    }
+
+    const code = resolvedCode || `${resource.toUpperCase().replace(/\s+/g, '_')}_NOT_FOUND`;
+    super(code, resolvedMessage || `${resource} không tìm thấy`, 404);
   }
 }
 

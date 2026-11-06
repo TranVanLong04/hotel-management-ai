@@ -150,3 +150,25 @@ export const insertPayment = async (paymentData) => {
 
   return data;
 };
+
+/**
+ * Cập nhật trạng thái hóa đơn (paid hoặc partial).
+ * @param {string} id - UUID hóa đơn
+ * @param {string} status - Trạng thái hóa đơn mới
+ * @returns {Promise<Object>}
+ */
+export const updateStatus = async (id, status) => {
+  const { data, error } = await supabaseAdmin
+    .from('invoices')
+    .update({ status })
+    .eq('id', id)
+    .select('*')
+    .single();
+
+  if (error) {
+    logger.error({ err: error, id, status }, 'InvoicesRepository: updateStatus failed');
+    throw new InternalError('Lỗi cập nhật trạng thái hóa đơn');
+  }
+
+  return data;
+};

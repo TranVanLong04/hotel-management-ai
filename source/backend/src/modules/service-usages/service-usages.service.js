@@ -31,7 +31,7 @@ export const addService = async (bookingId, data, userId) => {
 
   // 2. Kiểm tra trạng thái booking: PHẢI là checked_in
   if (booking.status !== BOOKING_STATUSES.CHECKED_IN) {
-    throw new BadRequestError('Chỉ có thể thêm dịch vụ khi khách đang ở');
+    throw new BadRequestError('Booking chưa check-in', 'BOOKING_NOT_CHECKED_IN');
   }
 
   // 3. Kiểm tra dịch vụ tồn tại
@@ -86,7 +86,7 @@ export const listBookingServices = async (bookingId, user) => {
   if (user.role === USER_ROLES.CUSTOMER) {
     const customer = await bookingsRepo.findCustomerByUserId(user.sub);
     if (!customer || booking.customer_id !== customer.id) {
-      throw new ForbiddenError('Không có quyền xem dịch vụ của đặt phòng này');
+      throw new ForbiddenError('Không có quyền truy cập', 'RESOURCE_NOT_OWNED');
     }
   }
 
@@ -105,7 +105,7 @@ export const removeServiceUsage = async (id, userId) => {
   // 1. Kiểm tra usage tồn tại
   const usage = await serviceUsagesRepo.findById(id);
   if (!usage) {
-    throw new NotFoundError('ServiceUsage');
+    throw new NotFoundError('Service usage', 'SERVICE_USAGE_NOT_FOUND');
   }
 
   // 2. Kiểm tra trạng thái booking
@@ -116,7 +116,7 @@ export const removeServiceUsage = async (id, userId) => {
 
   // 3. Không cho xóa nếu đã check-out
   if (booking.status === BOOKING_STATUSES.CHECKED_OUT) {
-    throw new BadRequestError('Không thể xóa dịch vụ sau khi đã check-out');
+    throw new BadRequestError('Booking đã check-out', 'BOOKING_ALREADY_CHECKED_OUT');
   }
 
   const removed = await serviceUsagesRepo.remove(id);
