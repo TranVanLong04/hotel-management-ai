@@ -1,5 +1,12 @@
 import api from './axios';
-import type { ApiResponse, PaginatedResponse, RoomType, PaginationParams } from '@/types';
+import type {
+  ApiResponse,
+  PaginatedResponse,
+  RoomType,
+  PaginationParams,
+  CreateRoomTypePayload,
+  UpdateRoomTypePayload,
+} from '@/types';
 
 export interface RoomTypeFilterParams extends PaginationParams {
   search?: string;
@@ -11,8 +18,8 @@ export interface RoomTypeFilterParams extends PaginationParams {
  */
 export const roomTypeApi = {
   /**
-   * Lấy danh sách các loại phòng (public)
-   * @param params search, page, limit
+   * Lấy danh sách các loại phòng (public / admin)
+   * @param params search, page, limit, is_active
    */
   list: (params?: RoomTypeFilterParams): Promise<PaginatedResponse<RoomType>> =>
     api.get('/room-types', { params }),
@@ -23,4 +30,22 @@ export const roomTypeApi = {
    */
   getById: (id: string): Promise<ApiResponse<RoomType>> =>
     api.get(`/room-types/${id}`),
+
+  /**
+   * Tạo loại phòng mới (Admin)
+   */
+  create: (payload: CreateRoomTypePayload): Promise<ApiResponse<RoomType>> =>
+    api.post('/room-types', payload),
+
+  /**
+   * Cập nhật loại phòng (Admin)
+   */
+  update: (id: string, payload: UpdateRoomTypePayload): Promise<ApiResponse<RoomType>> =>
+    api.patch(`/room-types/${id}`, payload),
+
+  /**
+   * Xóa mềm loại phòng (Admin — is_active = false)
+   */
+  delete: (id: string): Promise<ApiResponse<null>> =>
+    api.delete(`/room-types/${id}`),
 };

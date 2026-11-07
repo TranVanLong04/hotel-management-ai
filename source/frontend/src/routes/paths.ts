@@ -35,6 +35,7 @@ export const PATHS = {
   ADMIN_BOOKINGS: '/admin/bookings',
   ADMIN_REPORTS: '/admin/reports',
   ADMIN_AI_COMPARISON: '/admin/ai-comparison',
+  ADMIN_SETTINGS: '/admin/settings',
 
 
   // === Error pages ===

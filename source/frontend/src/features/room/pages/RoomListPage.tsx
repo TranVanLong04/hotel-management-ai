@@ -45,9 +45,9 @@ export function RoomListPage() {
     const newParams = new URLSearchParams(searchParams);
 
     if (value !== undefined && value !== '') {
-      newParams.set(key, String(value));
+      newParams.set(String(key), String(value));
     } else {
-      newParams.delete(key);
+      newParams.delete(String(key));
     }
 
     // Reset về trang 1 mỗi khi thay đổi tiêu chí lọc

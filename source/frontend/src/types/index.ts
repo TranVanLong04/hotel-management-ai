@@ -243,15 +243,19 @@ export interface PaginatedResponse<T> {
 export interface PaginationParams {
   page?: number;
   limit?: number;
+  [key: string]: unknown;
 }
 
 export interface BookingFilterParams extends PaginationParams {
   status?: BookingStatus;
   customer_id?: string;
   room_id?: string;
+  from?: string;
+  to?: string;
   from_date?: string;
   to_date?: string;
   search?: string;
+  [key: string]: unknown;
 }
 
 export interface RoomFilterParams extends PaginationParams {
@@ -259,6 +263,7 @@ export interface RoomFilterParams extends PaginationParams {
   room_type_id?: string;
   floor?: number;
   search?: string;
+  [key: string]: unknown;
 }
 
 // ========== VIETNAMESE LABELS (cho hiển thị FE) ==========
@@ -384,4 +389,5 @@ export * from './face';
 export * from './customer';
 export * from './aiComparison';
 export * from './checkout';
+export * from './admin';
 

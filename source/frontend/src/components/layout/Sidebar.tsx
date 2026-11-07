@@ -19,6 +19,7 @@ import {
   LogOut,
   UtensilsCrossed,
   BrainCircuit,
+  Settings,
 } from 'lucide-react';
 
 import { useAuthStore } from '@stores/authStore';
@@ -115,6 +116,12 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
           roles: ['admin'],
         },
         {
+          name: 'Quản lý Đặt phòng',
+          path: PATHS.ADMIN_BOOKINGS,
+          icon: CalendarDays,
+          roles: ['admin'],
+        },
+        {
           name: 'Danh sách Phòng',
           path: PATHS.ADMIN_ROOMS,
           icon: BedDouble,
@@ -150,6 +157,12 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
           icon: BrainCircuit,
           roles: ['admin'],
         },
+        {
+          name: 'Cài đặt hệ thống',
+          path: PATHS.ADMIN_SETTINGS,
+          icon: Settings,
+          roles: ['admin'],
+        },
       ],
     },
   ];
@@ -170,9 +183,8 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
       <div>
         {/* Header Logo */}
         <div
-          className={`flex h-16 items-center border-b border-gray-200/80 px-4 dark:border-gray-800 ${
-            collapsed && !isMobileView ? 'justify-center px-2' : 'justify-between'
-          }`}
+          className={`flex h-16 items-center border-b border-gray-200/80 px-4 dark:border-gray-800 ${collapsed && !isMobileView ? 'justify-center px-2' : 'justify-between'
+            }`}
         >
           <Link
             to={PATHS.HOME}
@@ -250,12 +262,10 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
                     to={item.path}
                     title={collapsed && !isMobileView ? item.name : undefined}
                     className={({ isActive }) =>
-                      `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-                        collapsed && !isMobileView ? 'justify-center px-2' : ''
-                      } ${
-                        isActive
-                          ? 'bg-primary-600 text-white shadow-sm shadow-primary-600/20 font-semibold'
-                          : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
+                      `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${collapsed && !isMobileView ? 'justify-center px-2' : ''
+                      } ${isActive
+                        ? 'bg-primary-600 text-white shadow-sm shadow-primary-600/20 font-semibold'
+                        : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
                       }`
                     }
                   >
@@ -278,9 +288,8 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
           <Link
             to={PATHS.HOME}
             title={collapsed && !isMobileView ? 'Trang chủ khách hàng' : undefined}
-            className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800 ${
-              collapsed && !isMobileView ? 'justify-center px-2' : ''
-            }`}
+            className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800 ${collapsed && !isMobileView ? 'justify-center px-2' : ''
+              }`}
           >
             <Home className="h-4 w-4 shrink-0" />
             {(!collapsed || isMobileView) && <span>Về trang chủ</span>}
@@ -291,9 +300,8 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
             type="button"
             onClick={handleLogout}
             title={collapsed && !isMobileView ? 'Đăng xuất' : undefined}
-            className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-danger-600 transition-colors hover:bg-danger-50 dark:text-danger-400 dark:hover:bg-danger-950/30 ${
-              collapsed && !isMobileView ? 'justify-center px-2' : ''
-            }`}
+            className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-danger-600 transition-colors hover:bg-danger-50 dark:text-danger-400 dark:hover:bg-danger-950/30 ${collapsed && !isMobileView ? 'justify-center px-2' : ''
+              }`}
           >
             <LogOut className="h-4 w-4 shrink-0" />
             {(!collapsed || isMobileView) && <span>Đăng xuất</span>}
@@ -329,9 +337,8 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
     <>
       {/* Desktop Sidebar cố định */}
       <aside
-        className={`hidden shrink-0 border-r border-gray-200/80 bg-white transition-all duration-300 md:block dark:border-gray-800 dark:bg-gray-900 ${
-          collapsed ? 'w-20' : 'w-64'
-        }`}
+        className={`hidden shrink-0 border-r border-gray-200/80 bg-white transition-all duration-300 md:block dark:border-gray-800 dark:bg-gray-900 ${collapsed ? 'w-20' : 'w-64'
+          }`}
       >
         <div className="sticky top-0 h-screen">{renderNavContent(false)}</div>
       </aside>

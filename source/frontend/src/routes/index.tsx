@@ -17,11 +17,17 @@ import { MomoCallbackPage } from '@/features/payment/pages/MomoCallbackPage';
 import { VnpayCallbackPage } from '@/features/payment/pages/VnpayCallbackPage';
 import { FaceRegisterPage } from '@/features/face/pages/FaceRegisterPage';
 import { ProfilePage } from '@/features/profile/pages/ProfilePage';
-import { AdminDashboardPage } from '@/pages/AdminDashboardPage';
 import { CheckinPage } from '@/features/checkin/pages/CheckinPage';
 import { CheckoutPage } from '@/features/checkout/pages/CheckoutPage';
 import { AiComparisonPage } from '@/features/ai-comparison/pages/AiComparisonPage';
 import { ManageServicesPage } from '@/features/admin/services/pages/ManageServicesPage';
+import { DashboardPage } from '@/pages/admin/DashboardPage';
+import { ManageBookingsPage } from '@/pages/admin/ManageBookingsPage';
+import { ManageRoomsPage } from '@/pages/admin/ManageRoomsPage';
+import { ManageRoomTypesPage } from '@/pages/admin/ManageRoomTypesPage';
+import { ManageUsersPage } from '@/pages/admin/ManageUsersPage';
+import { ReportPage } from '@/pages/admin/ReportPage';
+import { SettingsPage } from '@/pages/admin/SettingsPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { ForbiddenPage } from '@/pages/ForbiddenPage';
 import { PATHS } from './paths';
@@ -141,12 +147,20 @@ export const router = createBrowserRouter([
             element: <Navigate to={PATHS.STAFF_CHECKIN} replace />,
           },
 
-          // Nghiệp vụ Admin
+          // Nghiệp vụ Admin (8 Pages)
           {
             path: PATHS.ADMIN_DASHBOARD,
             element: (
               <RoleRoute allowedRoles={['admin']}>
-                <AdminDashboardPage />
+                <DashboardPage />
+              </RoleRoute>
+            ),
+          },
+          {
+            path: PATHS.ADMIN_BOOKINGS,
+            element: (
+              <RoleRoute allowedRoles={['admin']}>
+                <ManageBookingsPage />
               </RoleRoute>
             ),
           },
@@ -154,7 +168,7 @@ export const router = createBrowserRouter([
             path: PATHS.ADMIN_ROOMS,
             element: (
               <RoleRoute allowedRoles={['admin']}>
-                <AdminDashboardPage />
+                <ManageRoomsPage />
               </RoleRoute>
             ),
           },
@@ -162,7 +176,7 @@ export const router = createBrowserRouter([
             path: PATHS.ADMIN_ROOM_TYPES,
             element: (
               <RoleRoute allowedRoles={['admin']}>
-                <AdminDashboardPage />
+                <ManageRoomTypesPage />
               </RoleRoute>
             ),
           },
@@ -178,7 +192,7 @@ export const router = createBrowserRouter([
             path: PATHS.ADMIN_USERS,
             element: (
               <RoleRoute allowedRoles={['admin']}>
-                <AdminDashboardPage />
+                <ManageUsersPage />
               </RoleRoute>
             ),
           },
@@ -186,7 +200,15 @@ export const router = createBrowserRouter([
             path: PATHS.ADMIN_REPORTS,
             element: (
               <RoleRoute allowedRoles={['admin']}>
-                <AdminDashboardPage />
+                <ReportPage />
+              </RoleRoute>
+            ),
+          },
+          {
+            path: PATHS.ADMIN_SETTINGS,
+            element: (
+              <RoleRoute allowedRoles={['admin']}>
+                <SettingsPage />
               </RoleRoute>
             ),
           },
@@ -198,7 +220,6 @@ export const router = createBrowserRouter([
               </RoleRoute>
             ),
           },
-
 
           // Nghiệp vụ Lễ tân (Staff & Admin)
           {
@@ -215,7 +236,7 @@ export const router = createBrowserRouter([
           },
           {
             path: PATHS.STAFF_BOOKINGS,
-            element: <AdminDashboardPage />,
+            element: <ManageBookingsPage />,
           },
         ],
       },
