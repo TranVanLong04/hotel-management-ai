@@ -156,6 +156,12 @@ export interface Service {
   updated_at: string;
 }
 
+export type {
+  CreateServicePayload,
+  UpdateServicePayload,
+  ServiceQueryParams,
+} from './service';
+
 /** Sử dụng dịch vụ — unit_price là snapshot giá tại thời điểm dùng */
 export interface ServiceUsage {
   id: string;

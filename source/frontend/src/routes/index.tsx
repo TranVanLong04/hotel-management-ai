@@ -21,6 +21,7 @@ import { AdminDashboardPage } from '@/pages/AdminDashboardPage';
 import { CheckinPage } from '@/features/checkin/pages/CheckinPage';
 import { CheckoutPage } from '@/features/checkout/pages/CheckoutPage';
 import { AiComparisonPage } from '@/features/ai-comparison/pages/AiComparisonPage';
+import { ManageServicesPage } from '@/features/admin/services/pages/ManageServicesPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { ForbiddenPage } from '@/pages/ForbiddenPage';
 import { PATHS } from './paths';
@@ -169,7 +170,7 @@ export const router = createBrowserRouter([
             path: PATHS.ADMIN_SERVICES,
             element: (
               <RoleRoute allowedRoles={['admin']}>
-                <AdminDashboardPage />
+                <ManageServicesPage />
               </RoleRoute>
             ),
           },
