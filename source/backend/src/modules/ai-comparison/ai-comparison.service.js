@@ -31,8 +31,8 @@ export const runComparison = async ({
   file2,
   image1Url,
   image2Url,
-  thresholdFacenet = 0.70,
-  thresholdInsightface = 0.75,
+  thresholdFacenet = 0.75,
+  thresholdInsightface = 0.55,
   groundTruth = 'unknown', // 'genuine' | 'impostor' | 'unknown'
   datasetTag = 'manual',
   referenceName = 'Khuôn mặt A',
@@ -176,44 +176,53 @@ export const getHistory = async ({
  * Tính toán các chỉ số thống kê thực tế (Accuracy, FMR, FNMR, EER, Latency, ROC curve).
  * CHỈ tính toán độ chính xác khi có nhãn Ground Truth (genuine / impostor) thực tế, tuyệt đối không hardcode.
  */
-export const getStats = async ({ dateFrom, dateTo, datasetTag } = {}) => {
+export const getStats = async ({
+  dateFrom,
+  dateTo,
+  datasetTag,
+  thresholdFacenet = 0.75,
+  thresholdInsightface = 0.55,
+} = {}) => {
   const records = await aiCompRepo.getAllRecordsForStats({ dateFrom, dateTo, datasetTag });
 
   const totalRuns = records.length;
   const totalFacesTested = totalRuns * 2;
+
+  const fnThreshold = Number(thresholdFacenet) || 0.75;
+  const insThreshold = Number(thresholdInsightface) || 0.55;
 
   // Lọc tập dữ liệu có Ground Truth
   const genuineRecords = records.filter((r) => r.ground_truth === 'genuine');
   const impostorRecords = records.filter((r) => r.ground_truth === 'impostor');
   const labeledCount = genuineRecords.length + impostorRecords.length;
 
-  // 1. Phân tích FaceNet
+  // 1. Phân tích FaceNet theo ngưỡng fnThreshold
   let facenetTP = 0; // Genuine & is_match == true
   let facenetFN = 0; // Genuine & is_match == false (False Non-Match)
   let facenetFP = 0; // Impostor & is_match == true (False Match)
   let facenetTN = 0; // Impostor & is_match == false
 
   for (const r of genuineRecords) {
-    if (r.facenet_is_match) facenetTP++;
+    if (Number(r.facenet_similarity) >= fnThreshold) facenetTP++;
     else facenetFN++;
   }
   for (const r of impostorRecords) {
-    if (r.facenet_is_match) facenetFP++;
+    if (Number(r.facenet_similarity) >= fnThreshold) facenetFP++;
     else facenetTN++;
   }
 
-  // 2. Phân tích InsightFace
+  // 2. Phân tích InsightFace theo ngưỡng insThreshold
   let insightTP = 0;
   let insightFN = 0;
   let insightFP = 0;
   let insightTN = 0;
 
   for (const r of genuineRecords) {
-    if (r.insightface_is_match) insightTP++;
+    if (Number(r.insightface_similarity) >= insThreshold) insightTP++;
     else insightFN++;
   }
   for (const r of impostorRecords) {
-    if (r.insightface_is_match) insightFP++;
+    if (Number(r.insightface_similarity) >= insThreshold) insightFP++;
     else insightTN++;
   }
 
@@ -300,28 +309,41 @@ export const getStats = async ({ dateFrom, dateTo, datasetTag } = {}) => {
     }
   }
 
-  // 5. Danh sách các trường hợp 2 mô hình cho kết quả khác nhau (Discrepancies)
-  const discrepancyList = records
-    .filter((r) => !r.is_agreement)
-    .slice(0, 50)
-    .map((r) => ({
-      id: r.id,
-      job_id: r.job_id,
-      ground_truth: r.ground_truth,
-      reference_name: r.reference_name,
-      test_name: r.test_name,
-      reference_image_url: r.reference_image_url,
-      test_image_url: r.test_image_url,
-      facenet_similarity: Number(r.facenet_similarity),
-      facenet_is_match: r.facenet_is_match,
-      facenet_threshold: Number(r.facenet_threshold),
-      insightface_similarity: Number(r.insightface_similarity),
-      insightface_is_match: r.insightface_is_match,
-      insightface_threshold: Number(r.insightface_threshold),
-      discrepancy_type: r.discrepancy_type,
-      delta_similarity: Number(r.delta_similarity),
-      created_at: r.created_at,
-    }));
+  // 5. Đánh giá sự đồng thuận và danh sách sai lệch theo đúng 2 ngưỡng vận hành
+  let agreementCount = 0;
+  const discrepancyList = [];
+
+  for (const r of records) {
+    const fnMatch = Number(r.facenet_similarity) >= fnThreshold;
+    const insMatch = Number(r.insightface_similarity) >= insThreshold;
+
+    if (fnMatch === insMatch) {
+      agreementCount++;
+    } else {
+      if (discrepancyList.length < 50) {
+        discrepancyList.push({
+          id: r.id,
+          job_id: r.job_id,
+          ground_truth: r.ground_truth,
+          reference_name: r.reference_name,
+          test_name: r.test_name,
+          reference_image_url: r.reference_image_url,
+          test_image_url: r.test_image_url,
+          facenet_similarity: Number(r.facenet_similarity),
+          facenet_is_match: fnMatch,
+          facenet_threshold: fnThreshold,
+          insightface_similarity: Number(r.insightface_similarity),
+          insightface_is_match: insMatch,
+          insightface_threshold: insThreshold,
+          discrepancy_type: fnMatch ? 'facenet_only_match' : 'insightface_only_match',
+          delta_similarity: Number(Math.abs(Number(r.facenet_similarity) - Number(r.insightface_similarity)).toFixed(4)),
+          created_at: r.created_at,
+        });
+      }
+    }
+  }
+
+  const discrepancyCount = totalRuns - agreementCount;
 
   // Phân bố tương đồng (Histogram bins)
   const similarityBins = [
@@ -360,11 +382,12 @@ export const getStats = async ({ dateFrom, dateTo, datasetTag } = {}) => {
       genuineCount: genuineRecords.length,
       impostorCount: impostorRecords.length,
       unlabeledCount: totalRuns - labeledCount,
-      agreementCount: records.filter((r) => r.is_agreement).length,
-      discrepancyCount: records.filter((r) => !r.is_agreement).length,
+      agreementCount,
+      discrepancyCount,
     },
     facenet: {
       name: 'FaceNet (Inception-ResNet-v1)',
+      threshold: fnThreshold,
       accuracy: facenetAccuracy,
       fmr: facenetFMR,
       fnmr: facenetFNMR,
@@ -375,6 +398,7 @@ export const getStats = async ({ dateFrom, dateTo, datasetTag } = {}) => {
     },
     insightface: {
       name: 'InsightFace (ArcFace buffalo_l)',
+      threshold: insThreshold,
       accuracy: insightAccuracy,
       fmr: insightFMR,
       fnmr: insightFNMR,
@@ -442,6 +466,8 @@ export const runBatchBenchmark = async (userId = null) => {
       const res = await runComparison({
         image1Url: pair.image1.url,
         image2Url: pair.image2.url,
+        thresholdFacenet: 0.75,
+        thresholdInsightface: 0.55,
         groundTruth: pair.groundTruth,
         datasetTag: 'sample_album_benchmark',
         referenceName: `${pair.subjectName} (${pair.image1.label})`,

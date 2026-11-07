@@ -7,8 +7,8 @@ export const SAMPLE_ALBUM_PAIRS = [
   {
     id: 'pair-genuine-01',
     category: 'genuine',
-    title: 'Cùng 1 người: Góc nhìn thẳng vs Nụ cười',
-    description: 'Chụp chính diện trong cùng điều kiện ánh sáng phòng khách sạn, so sánh sự biến đổi biểu cảm.',
+    title: 'Cùng 1 người: Góc nhìn thẳng vs Biểu cảm tươi cười',
+    description: 'Chụp chính diện trong cùng điều kiện ánh sáng phòng khách sạn, so sánh sự biến đổi biểu cảm khuôn mặt.',
     subjectName: 'Alex Johnson',
     image1: {
       label: 'Ảnh tham chiếu (Góc thẳng)',
@@ -16,7 +16,7 @@ export const SAMPLE_ALBUM_PAIRS = [
     },
     image2: {
       label: 'Ảnh kiểm thử (Cười nhẹ)',
-      url: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=600&q=80',
+      url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80&sat=15&con=10',
     },
     groundTruth: 'genuine',
     difficulty: 'standard',
@@ -33,7 +33,7 @@ export const SAMPLE_ALBUM_PAIRS = [
     },
     image2: {
       label: 'Ảnh kiểm thử (Ánh sáng ngoài trời)',
-      url: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=600&q=80',
+      url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80&sat=20&con=15',
     },
     groundTruth: 'genuine',
     difficulty: 'medium',
@@ -41,7 +41,7 @@ export const SAMPLE_ALBUM_PAIRS = [
   {
     id: 'pair-genuine-03',
     category: 'genuine',
-    title: 'Cùng 1 người: Nghiêng góc 15 độ',
+    title: 'Cùng 1 người: Nghiêng góc 15 độ & bóng đổ',
     description: 'Kiểm tra thuật toán căn chỉnh mặt (Face Alignment) của RetinaFace và tiền xử lý FaceNet.',
     subjectName: 'Sarah Williams',
     image1: {
@@ -50,7 +50,7 @@ export const SAMPLE_ALBUM_PAIRS = [
     },
     image2: {
       label: 'Ảnh kiểm thử (Nghiêng nhẹ)',
-      url: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=600&q=80',
+      url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=600&q=80&sat=10&con=5',
     },
     groundTruth: 'genuine',
     difficulty: 'hard',

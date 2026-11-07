@@ -25,8 +25,8 @@ export const runComparison = asyncHandler(async (req, res) => {
     file2,
     image1Url: image1_url,
     image2Url: image2_url,
-    thresholdFacenet: threshold_facenet ? Number(threshold_facenet) : 0.70,
-    thresholdInsightface: threshold_insightface ? Number(threshold_insightface) : 0.75,
+    thresholdFacenet: threshold_facenet ? Number(threshold_facenet) : 0.75,
+    thresholdInsightface: threshold_insightface ? Number(threshold_insightface) : 0.55,
     groundTruth: ground_truth || 'unknown',
     datasetTag: dataset_tag || 'manual',
     referenceName: reference_name || 'Khuôn mặt A',
@@ -76,12 +76,14 @@ export const getHistory = asyncHandler(async (req, res) => {
  * Controller lấy báo cáo thống kê tổng hợp và ma trận chỉ số.
  */
 export const getStats = asyncHandler(async (req, res) => {
-  const { date_from, date_to, dataset_tag } = req.query;
+  const { date_from, date_to, dataset_tag, threshold_facenet, threshold_insightface } = req.query;
 
   const stats = await aiComparisonService.getStats({
     dateFrom: date_from,
     dateTo: date_to,
     datasetTag: dataset_tag,
+    thresholdFacenet: threshold_facenet ? Number(threshold_facenet) : 0.75,
+    thresholdInsightface: threshold_insightface ? Number(threshold_insightface) : 0.55,
   });
 
   return res.status(200).json({

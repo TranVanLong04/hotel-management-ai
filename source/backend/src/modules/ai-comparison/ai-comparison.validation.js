@@ -4,8 +4,8 @@ export const runComparisonSchema = z.object({
   body: z.object({
     image1_url: z.string().url().optional(),
     image2_url: z.string().url().optional(),
-    threshold_facenet: z.coerce.number().min(0).max(1).default(0.70),
-    threshold_insightface: z.coerce.number().min(0).max(1).default(0.75),
+    threshold_facenet: z.coerce.number().min(0).max(1).default(0.75),
+    threshold_insightface: z.coerce.number().min(0).max(1).default(0.55),
     ground_truth: z.enum(['genuine', 'impostor', 'unknown']).default('unknown'),
     dataset_tag: z.string().max(50).default('manual'),
     reference_name: z.string().max(100).default('Khuôn mặt A'),
@@ -30,6 +30,8 @@ export const getStatsSchema = z.object({
     date_from: z.string().optional(),
     date_to: z.string().optional(),
     dataset_tag: z.string().optional(),
+    threshold_facenet: z.coerce.number().min(0).max(1).optional(),
+    threshold_insightface: z.coerce.number().min(0).max(1).optional(),
   }),
 });
 

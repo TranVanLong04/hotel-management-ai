@@ -88,6 +88,7 @@ export interface SimilarityBin {
 
 export interface ModelStats {
   name: string;
+  threshold?: number;
   accuracy: number | null;
   fmr: number | null;
   fnmr: number | null;
