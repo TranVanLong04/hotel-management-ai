@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import {
   CheckCircle,
   XCircle,
@@ -7,6 +7,10 @@ import {
   BedDouble,
   ScanFace,
   Calendar,
+  UtensilsCrossed,
+  Plus,
+  Trash2,
+  Loader2,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -20,12 +24,15 @@ import { ActionsMenu } from '@components/common/ActionsMenu';
 import { ConfirmDialog } from '@components/common/ConfirmDialog';
 import { useDataTable } from '@hooks/useDataTable';
 import { bookingApi } from '@/api/booking.api';
+import { serviceUsageApi } from '@/api/serviceUsage.api';
+import { AddServiceModal } from '@/features/booking/components/AddServiceModal';
 import { formatCurrency, formatDate, formatDateTime } from '@utils/format';
 import type {
   Booking,
   BookingStatus,
   Column,
   BookingFilterParams,
+  ServiceUsageItem,
 } from '@/types';
 import { BOOKING_STATUS_LABELS, BOOKING_STATUS_COLORS } from '@/types';
 
@@ -53,6 +60,61 @@ export function ManageBookingsPage() {
   const [targetBooking, setTargetBooking] = useState<Booking | null>(null);
   const [cancelReason, setCancelReason] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
+
+  // Service Modal state & Detail services
+  const [addServiceModalOpen, setAddServiceModalOpen] = useState(false);
+  const [serviceBooking, setServiceBooking] = useState<Booking | null>(null);
+  const [detailServices, setDetailServices] = useState<
+    (ServiceUsageItem & { services?: { name: string; unit: string } })[]
+  >([]);
+  const [loadingDetailServices, setLoadingDetailServices] = useState(false);
+  const [deletingServiceId, setDeletingServiceId] = useState<string | null>(null);
+
+  // Tải danh sách dịch vụ cho modal xem chi tiết
+  const fetchDetailServices = useCallback(async (bookingId: string) => {
+    try {
+      setLoadingDetailServices(true);
+      const res = await serviceUsageApi.listByBooking(bookingId);
+      setDetailServices(
+        (res.data as unknown as (ServiceUsageItem & { services?: { name: string; unit: string } })[]) ?? []
+      );
+    } catch {
+      setDetailServices([]);
+    } finally {
+      setLoadingDetailServices(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (detailModalOpen && selectedBooking) {
+      fetchDetailServices(selectedBooking.id);
+    }
+  }, [detailModalOpen, selectedBooking, fetchDetailServices]);
+
+  // Xóa dịch vụ trong modal chi tiết
+  const handleDeleteService = async (usageId: string, serviceName: string) => {
+    try {
+      setDeletingServiceId(usageId);
+      await serviceUsageApi.remove(usageId);
+      toast.success(`Đã xóa dịch vụ "${serviceName}"`);
+      if (selectedBooking) {
+        fetchDetailServices(selectedBooking.id);
+      }
+      refetch();
+    } catch (err: unknown) {
+      const errResponse = err as {
+        response?: { data?: { error?: { message?: string } } };
+        message?: string;
+      };
+      const msg =
+        errResponse?.response?.data?.error?.message ??
+        errResponse?.message ??
+        'Không thể xóa dịch vụ';
+      toast.error(msg);
+    } finally {
+      setDeletingServiceId(null);
+    }
+  };
 
   // useDataTable hook quản lý filters và search tập trung
   const {
@@ -237,6 +299,7 @@ export function ManageBookingsPage() {
         render: (b) => {
           const canConfirm = b.status === 'pending';
           const canCancel = b.status === 'pending' || b.status === 'confirmed';
+          const canAddService = b.status === 'checked_in';
 
           return (
             <ActionsMenu
@@ -249,31 +312,43 @@ export function ManageBookingsPage() {
                     setDetailModalOpen(true);
                   },
                 },
+                ...(canAddService
+                  ? [
+                    {
+                      label: 'Thêm dịch vụ phát sinh',
+                      icon: UtensilsCrossed,
+                      onClick: () => {
+                        setServiceBooking(b);
+                        setAddServiceModalOpen(true);
+                      },
+                    },
+                  ]
+                  : []),
                 ...(canConfirm
                   ? [
-                      {
-                        label: 'Duyệt đơn',
-                        icon: CheckCircle,
-                        onClick: () => {
-                          setTargetBooking(b);
-                          setConfirmDialogOpen(true);
-                        },
+                    {
+                      label: 'Duyệt đơn',
+                      icon: CheckCircle,
+                      onClick: () => {
+                        setTargetBooking(b);
+                        setConfirmDialogOpen(true);
                       },
-                    ]
+                    },
+                  ]
                   : []),
                 ...(canCancel
                   ? [
-                      {
-                        label: 'Hủy đơn',
-                        icon: XCircle,
-                        danger: true,
-                        divider: true,
-                        onClick: () => {
-                          setTargetBooking(b);
-                          setCancelDialogOpen(true);
-                        },
+                    {
+                      label: 'Hủy đơn',
+                      icon: XCircle,
+                      danger: true,
+                      divider: true,
+                      onClick: () => {
+                        setTargetBooking(b);
+                        setCancelDialogOpen(true);
                       },
-                    ]
+                    },
+                  ]
                   : []),
               ]}
             />
@@ -308,11 +383,10 @@ export function ManageBookingsPage() {
                 key={tab.id}
                 type="button"
                 onClick={() => handleTabChange(tab.id)}
-                className={`cursor-pointer whitespace-nowrap rounded-xl px-4 py-2 text-xs font-semibold transition-colors ${
-                  isActive
-                    ? 'bg-primary-600 text-white shadow-xs dark:bg-primary-500'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white'
-                }`}
+                className={`cursor-pointer whitespace-nowrap rounded-xl px-4 py-2 text-xs font-semibold transition-colors ${isActive
+                  ? 'bg-primary-600 text-white shadow-xs dark:bg-primary-500'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white'
+                  }`}
               >
                 {tab.label}
               </button>
@@ -503,6 +577,112 @@ export function ManageBookingsPage() {
                 </p>
               </div>
             )}
+
+            {/* Dịch vụ đã sử dụng trong kỳ nghỉ (Feature 07) */}
+            <Card className="p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="flex items-center gap-1.5 font-bold text-gray-900 dark:text-white">
+                  <UtensilsCrossed className="h-4 w-4 text-primary-600" />
+                  <span>Dịch vụ phát sinh trong phòng</span>
+                </h4>
+                {selectedBooking.status === 'checked_in' && (
+                  <Button
+                    type="button"
+                    variant="primary"
+                    size="sm"
+                    onClick={() => {
+                      setServiceBooking(selectedBooking);
+                      setAddServiceModalOpen(true);
+                    }}
+                  >
+                    <Plus className="mr-1 h-3.5 w-3.5" />
+                    Thêm dịch vụ
+                  </Button>
+                )}
+              </div>
+
+              {loadingDetailServices ? (
+                <div className="flex justify-center py-4">
+                  <Loader2 className="h-5 w-5 animate-spin text-primary-600" />
+                </div>
+              ) : detailServices.length === 0 ? (
+                <p className="text-gray-400 italic">
+                  Chưa có dịch vụ phát sinh nào cho phòng này.
+                </p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead className="border-b border-gray-100 text-gray-400 dark:border-gray-800">
+                      <tr>
+                        <th className="py-2">Dịch vụ</th>
+                        <th className="py-2">Đơn giá</th>
+                        <th className="py-2">SL</th>
+                        <th className="py-2">Thành tiền</th>
+                        <th className="py-2">Thời gian</th>
+                        {selectedBooking.status !== 'checked_out' && (
+                          <th className="py-2 text-right">Xóa</th>
+                        )}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                      {detailServices.map((ds) => {
+                        const sName = ds.services?.name ?? ds.service_name ?? 'Dịch vụ';
+                        const sUnit = ds.services?.unit ?? ds.unit ?? '';
+                        const sTotal = ds.total_amount ?? ds.unit_price * ds.quantity;
+                        return (
+                          <tr key={ds.id}>
+                            <td className="py-2 font-medium text-gray-900 dark:text-white">
+                              {sName}
+                            </td>
+                            <td className="py-2 font-mono text-gray-600 dark:text-gray-300">
+                              {formatCurrency(ds.unit_price)}
+                            </td>
+                            <td className="py-2 text-gray-600 dark:text-gray-300">
+                              {ds.quantity} {sUnit}
+                            </td>
+                            <td className="py-2 font-bold font-mono text-primary-600 dark:text-primary-400">
+                              {formatCurrency(sTotal)}
+                            </td>
+                            <td className="py-2 text-gray-400">
+                              {formatDateTime(ds.used_at)}
+                            </td>
+                            {selectedBooking.status !== 'checked_out' && (
+                              <td className="py-2 text-right">
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteService(ds.id, sName)}
+                                  disabled={deletingServiceId === ds.id}
+                                  className="text-gray-400 hover:text-danger-500 transition-colors p-1"
+                                  title="Xóa dịch vụ này"
+                                >
+                                  {deletingServiceId === ds.id ? (
+                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                  ) : (
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  )}
+                                </button>
+                              </td>
+                            )}
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                  <div className="pt-2 flex justify-end text-xs font-semibold text-gray-700 dark:text-gray-300">
+                    Tổng tiền dịch vụ:{' '}
+                    <span className="ml-1 text-primary-600 dark:text-primary-400 font-mono font-bold">
+                      {formatCurrency(
+                        detailServices.reduce(
+                          (sum, ds) =>
+                            sum + (ds.total_amount ?? ds.unit_price * ds.quantity),
+                          0
+                        )
+                      )}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </Card>
           </div>
         </Modal>
       )}
@@ -568,6 +748,21 @@ export function ManageBookingsPage() {
           </div>
         </div>
       </Modal>
+
+      {/* Modal Thêm Dịch Vụ Phát Sinh Cho Booking Đang Ở */}
+      {serviceBooking && (
+        <AddServiceModal
+          open={addServiceModalOpen}
+          onClose={() => setAddServiceModalOpen(false)}
+          bookingId={serviceBooking.id}
+          onSuccess={() => {
+            refetch();
+            if (selectedBooking && selectedBooking.id === serviceBooking.id) {
+              fetchDetailServices(selectedBooking.id);
+            }
+          }}
+        />
+      )}
     </div>
   );
 }
