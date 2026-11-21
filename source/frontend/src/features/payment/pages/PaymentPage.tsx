@@ -21,8 +21,8 @@ export function PaymentPage() {
   const [booking, setBooking] = useState<Booking | null>(null);
   const [loadingBooking, setLoadingBooking] = useState(true);
   const [errorBooking, setErrorBooking] = useState<string | null>(null);
-  const [selectedGateway, setSelectedGateway] = useState<PaymentGateway>('momo');
-  const [availableGateways, setAvailableGateways] = useState<string[]>(['momo']);
+  const [selectedGateway, setSelectedGateway] = useState<PaymentGateway>('paypal');
+  const [availableGateways, setAvailableGateways] = useState<string[]>(['paypal']);
 
   const { initiatePayment, loading: paying } = useCreatePayment();
 
@@ -37,19 +37,19 @@ export function PaymentPage() {
         if (isMounted && gwRes.data) {
           const resData = gwRes.data;
           const list: string[] = [];
-          if (resData.momo) list.push('momo');
+          if (resData.paypal) list.push('paypal');
           if (resData.vnpay) list.push('vnpay');
 
-          const finalAvailable = list.length > 0 ? list : ['momo'];
+          const finalAvailable = list.length > 0 ? list : ['paypal'];
           setAvailableGateways(finalAvailable);
           if (!finalAvailable.includes(selectedGateway)) {
             setSelectedGateway(finalAvailable[0] as PaymentGateway);
           }
         }
       } catch {
-        // Fallback về MoMo nếu lỗi
+        // Fallback về PayPal nếu lỗi
         if (isMounted) {
-          setAvailableGateways(['momo']);
+          setAvailableGateways(['paypal']);
         }
       }
 
@@ -205,11 +205,11 @@ export function PaymentPage() {
               >
                 <Sparkles className="mr-2 h-5 w-5" />
                 <span>
-                  Thanh toán qua {selectedGateway === 'momo' ? 'MoMo' : 'VNPay'} ngay
+                  Thanh toán qua {selectedGateway === 'paypal' ? 'PayPal' : 'VNPay'} ngay
                 </span>
               </Button>
               <p className="mt-3 text-center text-xs text-gray-400 dark:text-gray-500">
-                Bạn sẽ được chuyển hướng an toàn đến cổng thanh toán {selectedGateway === 'momo' ? 'MoMo' : 'VNPay'} để thực hiện giao dịch.
+                Bạn sẽ được chuyển hướng an toàn đến cổng thanh toán {selectedGateway === 'paypal' ? 'PayPal' : 'VNPay'} để thực hiện giao dịch.
               </p>
             </div>
           </div>

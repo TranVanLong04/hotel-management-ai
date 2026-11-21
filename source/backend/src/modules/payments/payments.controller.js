@@ -36,6 +36,27 @@ export const createPayment = asyncHandler(async (req, res) => {
 });
 
 /**
+ * Capture thanh toán PayPal từ frontend callback
+ * POST /api/payments/paypal/capture
+ */
+export const capturePaypalPayment = asyncHandler(async (req, res) => {
+  const { orderId, bookingId } = req.body;
+  const result = await paymentsService.capturePaypalPayment({
+    orderId,
+    bookingId,
+    ipAddress: req.ip || req.connection.remoteAddress,
+  });
+
+  res.status(200).json({
+    success: result.success,
+    data: result,
+    message: result.success
+      ? 'Xác nhận thanh toán PayPal thành công'
+      : result.reason || 'Thanh toán PayPal không thành công',
+  });
+});
+
+/**
  * Xử lý Return URL từ MoMo
  * GET /api/payments/momo/return
  */

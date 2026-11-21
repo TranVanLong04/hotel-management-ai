@@ -8,7 +8,8 @@ import type {
 } from '@/types';
 
 export interface AvailableGatewaysResponse {
-  momo: boolean;
+  paypal?: boolean;
+  momo?: boolean;
   vnpay: boolean;
   gateways?: Array<{ id: string; name: string; available: boolean }>;
   available?: string[];
@@ -51,4 +52,11 @@ export const paymentApi = {
    */
   verifyVnpayReturn: (queryString: string): Promise<ApiResponse<PaymentCallbackResult>> =>
     api.get(`/payments/vnpay/return${queryString}`),
+
+  /**
+   * Xác nhận hoàn tất thanh toán PayPal (Capture Payment)
+   * @param payload { orderId, bookingId }
+   */
+  capturePaypalPayment: (payload: { orderId: string; bookingId?: string }): Promise<ApiResponse<PaymentCallbackResult>> =>
+    api.post('/payments/paypal/capture', payload),
 };

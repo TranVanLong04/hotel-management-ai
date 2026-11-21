@@ -21,17 +21,18 @@ const envSchema = z.object({
   AI_SERVICE_URL: z.string().url().default('http://localhost:8000'),
   AI_SERVICE_API_KEY: z.string().default(''),
 
+  // Chatbot Service (FastAPI Gemini & RAG)
+  CHATBOT_SERVICE_URL: z.string().url().default('http://localhost:8001'),
+
   // Frontend URL
   FRONTEND_URL: z.string().url().default('http://localhost:5173'),
 
-  // MoMo Gateway
-  MOMO_PARTNER_CODE: z.string().default('MOMO'),
-  MOMO_ACCESS_KEY: z.string().default('F8BBA842ECF85'),
-  MOMO_SECRET_KEY: z.string().default('K951B6PE1waDMi640xX08PD3vg6EkVlz'),
-  MOMO_API_URL: z.string().url().default('https://test-payment.momo.vn/v2/gateway/api/create'),
-  MOMO_QUERY_URL: z.string().url().default('https://test-payment.momo.vn/v2/gateway/api/query'),
-  MOMO_REDIRECT_URL: z.string().default('http://localhost:5173/payment/callback/momo'),
-  MOMO_IPN_URL: z.string().default('https://hotel-ai-webhook.ngrok.io/api/payments/momo/ipn'),
+  // PayPal Gateway (Sandbox REST API v2)
+  PAYPAL_CLIENT_ID: z.string().default(''),
+  PAYPAL_CLIENT_SECRET: z.string().default(''),
+  PAYPAL_API_URL: z.string().url().default('https://api-m.sandbox.paypal.com'),
+  PAYPAL_RETURN_URL: z.string().default('http://localhost:5173/payment/callback/paypal'),
+  PAYPAL_CANCEL_URL: z.string().default('http://localhost:5173/payment/cancel'),
 
   // VNPay Gateway
   VNPAY_TMN_CODE: z.string().default('TESTTMN1'),

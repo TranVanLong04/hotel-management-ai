@@ -13,6 +13,7 @@ import { BookingPage } from '@/features/booking/pages/BookingPage';
 import { MyBookingsPage } from '@/features/booking/pages/MyBookingsPage';
 import { BookingDetailPage } from '@/features/booking/pages/BookingDetailPage';
 import { PaymentPage } from '@/features/payment/pages/PaymentPage';
+import { PaypalCallbackPage } from '@/features/payment/pages/PaypalCallbackPage';
 import { MomoCallbackPage } from '@/features/payment/pages/MomoCallbackPage';
 import { VnpayCallbackPage } from '@/features/payment/pages/VnpayCallbackPage';
 import { FaceRegisterPage } from '@/features/face/pages/FaceRegisterPage';
@@ -28,6 +29,7 @@ import { ManageRoomTypesPage } from '@/pages/admin/ManageRoomTypesPage';
 import { ManageUsersPage } from '@/pages/admin/ManageUsersPage';
 import { ReportPage } from '@/pages/admin/ReportPage';
 import { SettingsPage } from '@/pages/admin/SettingsPage';
+import { AdminAssistantPage } from '@/pages/admin/AdminAssistantPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { ForbiddenPage } from '@/pages/ForbiddenPage';
 import { PATHS } from './paths';
@@ -60,7 +62,11 @@ export const router = createBrowserRouter([
         path: PATHS.ROOM_DETAIL,
         element: <RoomDetailPage />,
       },
-      // Kết quả thanh toán MoMo & VNPay (Public Callback return)
+      // Kết quả thanh toán PayPal, MoMo & VNPay (Public Callback return)
+      {
+        path: PATHS.PAYMENT_PAYPAL_CALLBACK,
+        element: <PaypalCallbackPage />,
+      },
       {
         path: PATHS.PAYMENT_MOMO_CALLBACK,
         element: <MomoCallbackPage />,
@@ -217,6 +223,14 @@ export const router = createBrowserRouter([
             element: (
               <RoleRoute allowedRoles={['admin']}>
                 <AiComparisonPage />
+              </RoleRoute>
+            ),
+          },
+          {
+            path: PATHS.ADMIN_AI_ASSISTANT,
+            element: (
+              <RoleRoute allowedRoles={['admin']}>
+                <AdminAssistantPage />
               </RoleRoute>
             ),
           },

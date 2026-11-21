@@ -60,3 +60,33 @@ export const uploadImage = (req, res, next) => {
     next();
   });
 };
+
+/**
+ * Middleware upload ảnh cho Chatbot Face Verification.
+ * Chấp nhận cả field name 'image' hoặc 'file'.
+ */
+export const uploadChatFace = (req, res, next) => {
+  const handler = upload.fields([
+    { name: 'image', maxCount: 1 },
+    { name: 'file', maxCount: 1 },
+  ]);
+
+  handler(req, res, (err) => {
+    if (err) {
+      if (err instanceof multer.MulterError) {
+        if (err.code === 'LIMIT_FILE_SIZE') {
+          return next(new BadRequestError('Kích thước ảnh không được vượt quá 5MB'));
+        }
+        return next(new BadRequestError(`Lỗi tải file: ${err.message}`));
+      }
+      return next(err);
+    }
+
+    if (req.files) {
+      req.file = req.files['image']?.[0] || req.files['file']?.[0];
+    }
+
+    next();
+  });
+};
+

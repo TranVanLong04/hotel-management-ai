@@ -30,6 +30,12 @@ export function useCreatePayment(): UseCreatePaymentResult {
 
         const data = response.data;
 
+        // Nếu PayPal -> Chuyển hướng sang trang thanh toán PayPal
+        if (gateway === 'paypal' && (data.payUrl || data.paymentUrl)) {
+          window.location.href = (data.payUrl || data.paymentUrl)!;
+          return;
+        }
+
         // Nếu MoMo -> Chuyển hướng sang trang thanh toán MoMo
         if (gateway === 'momo' && data.payUrl) {
           window.location.href = data.payUrl;
@@ -39,6 +45,11 @@ export function useCreatePayment(): UseCreatePaymentResult {
         // Nếu VNPay -> Chuyển hướng sang trang thanh toán VNPay
         if (gateway === 'vnpay' && data.paymentUrl) {
           window.location.href = data.paymentUrl;
+          return;
+        }
+
+        if (data.payUrl || data.paymentUrl) {
+          window.location.href = (data.payUrl || data.paymentUrl)!;
           return;
         }
 

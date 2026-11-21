@@ -8,7 +8,7 @@ import { PATHS } from '@routes/paths';
 interface PaymentResultCardProps {
   loading: boolean;
   success: boolean;
-  gateway: 'momo' | 'vnpay';
+  gateway: 'momo' | 'vnpay' | 'paypal';
   bookingId?: string;
   errorMessage?: string;
 }
@@ -27,7 +27,7 @@ export function PaymentResultCard({
   const navigate = useNavigate();
   const [countdown, setCountdown] = useState(3);
 
-  const gatewayName = gateway === 'momo' ? 'MoMo' : 'VNPay';
+  const gatewayName = gateway === 'paypal' ? 'PayPal' : gateway === 'momo' ? 'MoMo' : 'VNPay';
   const faceRegisterUrl = bookingId
     ? `${PATHS.FACE_REGISTER}?bookingId=${bookingId}`
     : PATHS.FACE_REGISTER;

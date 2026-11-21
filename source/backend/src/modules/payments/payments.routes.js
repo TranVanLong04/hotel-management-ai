@@ -4,6 +4,7 @@ import { requireCustomer } from '../../middlewares/role.middleware.js';
 import { validate } from '../../middlewares/validate.middleware.js';
 import {
   createPaymentSchema,
+  paypalCaptureSchema,
   momoCallbackSchema,
   vnpayCallbackSchema,
   bookingIdParamSchema,
@@ -35,6 +36,14 @@ router.post(
   requireCustomer,
   validate(createPaymentSchema),
   paymentsController.createPayment
+);
+
+// 1.1. Capture thanh toán PayPal (Frontend Return Callback)
+router.post(
+  '/paypal/capture',
+  authenticate,
+  validate(paypalCaptureSchema),
+  paymentsController.capturePaypalPayment
 );
 
 // 2. MoMo Callbacks

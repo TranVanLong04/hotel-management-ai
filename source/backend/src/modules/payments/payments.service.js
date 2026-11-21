@@ -1,4 +1,5 @@
 import * as paymentsRepo from './payments.repository.js';
+import * as paypalGateway from './gateways/paypal.gateway.js';
 import * as momoGateway from './gateways/momo.gateway.js';
 import * as vnpayGateway from './gateways/vnpay.gateway.js';
 import { sendBookingConfirmation } from '../../services/email/email.service.js';
@@ -17,20 +18,22 @@ import { supabaseAdmin } from '../../config/supabase.js';
  * @returns {{ momo: boolean, vnpay: boolean, gateways: Array<{ id: string, name: string, available: boolean }>, available: Array<string> }}
  */
 export const getAvailableGateways = () => {
+  const paypalConfigured = paypalGateway.isPaypalConfigured();
   const vnpayConfigured = vnpayGateway.isVnpayConfigured();
 
-  const available = ['momo'];
+  const available = ['paypal'];
   if (vnpayConfigured) {
     available.push('vnpay');
   }
 
   return {
-    momo: true,
+    paypal: true,
+    momo: false,
     vnpay: vnpayConfigured,
     gateways: [
       {
-        id: 'momo',
-        name: 'Ví MoMo',
+        id: 'paypal',
+        name: 'PayPal (Thẻ Quốc Tế / Ví PayPal)',
         available: true,
       },
       {
@@ -77,6 +80,32 @@ export const createPayment = async (userId, { booking_id, gateway }, ipAddr = '1
   const orderInfo = `Thanh toan don dat phong ${booking.booking_code}`;
 
   // 4. Khởi tạo thanh toán qua Gateway tương ứng
+  if (gateway === 'paypal') {
+    const paypalResult = await paypalGateway.createPayment({
+      bookingId: booking.id,
+      bookingCode: booking.booking_code,
+      amount,
+      orderInfo,
+    });
+
+    await paymentsRepo.createPaymentLog({
+      booking_id: booking.id,
+      gateway: 'paypal',
+      event_type: 'create_payment',
+      request_payload: { booking_id, amount, gateway },
+      response_payload: paypalResult,
+      ip_address: ipAddr,
+    });
+
+    return {
+      gateway: 'paypal',
+      payUrl: paypalResult.payUrl,
+      orderId: paypalResult.orderId,
+      usdAmount: paypalResult.usdAmount,
+      nextStep: 'payment',
+    };
+  }
+
   if (gateway === 'momo') {
     const momoResult = await momoGateway.createMomoPayment({
       bookingId: booking.id,
@@ -209,6 +238,64 @@ const finalizeSuccessfulPayment = async ({
   }
 
   return { alreadyProcessed: false, payment: paymentRecord, booking: updatedBooking };
+};
+
+/**
+ * Xử lý xác nhận thanh toán PayPal (Capture Payment)
+ * Khi khách hàng duyệt thanh toán và redirect về /payment/callback/paypal
+ */
+export const capturePaypalPayment = async ({ orderId, bookingId, ipAddress = '127.0.0.1' }) => {
+  const captureResult = await paypalGateway.capturePayment(orderId);
+
+  if (!captureResult.success) {
+    await paymentsRepo.createPaymentLog({
+      booking_id: bookingId || captureResult.bookingId || null,
+      gateway: 'paypal',
+      event_type: 'capture_failed',
+      request_payload: { orderId, bookingId },
+      response_payload: captureResult.raw,
+      ip_address: ipAddress,
+    });
+
+    return {
+      success: false,
+      status: captureResult.status,
+      reason: 'Xác thực thanh toán PayPal thất bại hoặc chưa hoàn tất',
+    };
+  }
+
+  const targetBookingId = bookingId || captureResult.bookingId;
+  if (!targetBookingId) {
+    throw new BadRequestError('Không tìm thấy bookingId tương ứng với giao dịch PayPal');
+  }
+
+  const finalizeResult = await finalizeSuccessfulPayment({
+    bookingId: targetBookingId,
+    gateway: 'paypal',
+    orderId: captureResult.orderId,
+    transactionId: captureResult.captureId,
+    amount: null, // Sẽ lấy từ booking.room_subtotal
+    rawResponse: captureResult.raw,
+  });
+
+  await paymentsRepo.createPaymentLog({
+    booking_id: targetBookingId,
+    gateway: 'paypal',
+    event_type: 'capture_success',
+    request_payload: { orderId, bookingId: targetBookingId },
+    response_payload: captureResult.raw,
+    ip_address: ipAddress,
+  });
+
+  return {
+    success: true,
+    bookingId: targetBookingId,
+    orderId: captureResult.orderId,
+    captureId: captureResult.captureId,
+    booking: finalizeResult.booking,
+    payment: finalizeResult.payment,
+    nextStep: 'face_register',
+  };
 };
 
 /**

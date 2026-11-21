@@ -39,6 +39,7 @@ export const BOOKING_STATUSES = Object.freeze({
 
 // === Payment Gateways (Cổng thanh toán) ===
 export const PAYMENT_GATEWAYS = Object.freeze({
+  PAYPAL: 'paypal',
   MOMO: 'momo',
   VNPAY: 'vnpay',
   CASH: 'cash',

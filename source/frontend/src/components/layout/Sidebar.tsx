@@ -19,6 +19,7 @@ import {
   LogOut,
   UtensilsCrossed,
   BrainCircuit,
+  Bot,
   Settings,
 } from 'lucide-react';
 
@@ -156,6 +157,13 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
           path: PATHS.ADMIN_AI_COMPARISON,
           icon: BrainCircuit,
           roles: ['admin'],
+        },
+        {
+          name: 'Trợ lý AI (Admin)',
+          path: PATHS.ADMIN_AI_ASSISTANT,
+          icon: Bot,
+          roles: ['admin'],
+          badge: 'AI',
         },
         {
           name: 'Cài đặt hệ thống',

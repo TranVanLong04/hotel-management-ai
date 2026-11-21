@@ -13,6 +13,8 @@ export const PATHS = {
   // === Customer (yêu cầu đăng nhập) ===
   BOOKING: '/booking/:id',
   PAYMENT: '/payment/:bookingId',
+  PAYPAL_CALLBACK: '/payment/callback/paypal',
+  PAYMENT_PAYPAL_CALLBACK: '/payment/callback/paypal',
   PAYMENT_MOMO_CALLBACK: '/payment/callback/momo',
   PAYMENT_VNPAY_CALLBACK: '/payment/callback/vnpay',
   MY_BOOKINGS: '/my-bookings',
@@ -35,6 +37,7 @@ export const PATHS = {
   ADMIN_BOOKINGS: '/admin/bookings',
   ADMIN_REPORTS: '/admin/reports',
   ADMIN_AI_COMPARISON: '/admin/ai-comparison',
+  ADMIN_AI_ASSISTANT: '/admin/ai-assistant',
   ADMIN_SETTINGS: '/admin/settings',
 
 

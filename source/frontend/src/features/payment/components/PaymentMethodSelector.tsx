@@ -19,12 +19,12 @@ interface MethodOption {
 
 const PAYMENT_METHODS: MethodOption[] = [
   {
-    id: 'momo',
-    title: 'Ví Điện Tử MoMo',
-    subtitle: 'Quét mã QR qua App MoMo hoặc thanh toán trực tiếp',
-    icon: Wallet,
-    badge: 'Phổ biến',
-    badgeColor: 'bg-pink-100 text-pink-700 dark:bg-pink-950/60 dark:text-pink-300',
+    id: 'paypal',
+    title: 'Ví Điện Tử PayPal',
+    subtitle: 'Thanh toán quốc tế qua PayPal Checkout (Visa, Mastercard, AMEX)',
+    icon: CreditCard,
+    badge: 'Quốc tế',
+    badgeColor: 'bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300',
   },
   {
     id: 'vnpay',
@@ -32,19 +32,19 @@ const PAYMENT_METHODS: MethodOption[] = [
     subtitle: 'Ứng dụng ngân hàng, Thẻ ATM nội địa, Visa/Mastercard',
     icon: CreditCard,
     badge: 'Đa dạng ngân hàng',
-    badgeColor: 'bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300',
+    badgeColor: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300',
   },
 ];
 
 /**
  * Component chọn phương thức thanh toán trực tuyến
- * CHỈ hỗ trợ 2 cổng online: MoMo và VNPay (Tuyệt đối KHÔNG có tiền mặt trong flow online)
+ * Hỗ trợ 2 cổng online: PayPal và VNPay
  */
 export function PaymentMethodSelector({
   selectedGateway,
   onSelect,
   disabled = false,
-  availableGateways = ['momo'],
+  availableGateways = ['paypal'],
 }: PaymentMethodSelectorProps) {
   return (
     <div className="space-y-4">
@@ -92,9 +92,9 @@ export function PaymentMethodSelector({
                   <div className="flex items-center gap-3">
                     <div
                       className={`flex h-10 w-10 items-center justify-center rounded-xl ${
-                        method.id === 'momo'
-                          ? 'bg-[#a50064]/10 text-[#a50064] dark:bg-[#a50064]/20 dark:text-pink-400'
-                          : 'bg-[#005ba6]/10 text-[#005ba6] dark:bg-[#005ba6]/20 dark:text-blue-400'
+                        method.id === 'paypal'
+                          ? 'bg-[#003087]/10 text-[#003087] dark:bg-[#003087]/20 dark:text-blue-400'
+                          : 'bg-[#005ba6]/10 text-[#005ba6] dark:bg-[#005ba6]/20 dark:text-emerald-400'
                       }`}
                     >
                       <Icon className="h-5 w-5" />

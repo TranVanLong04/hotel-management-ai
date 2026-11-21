@@ -361,7 +361,7 @@ export interface CancelBookingPayload {
 // ========== PAYMENT TYPES (ONLINE GATEWAYS) ==========
 
 /** Cổng thanh toán trực tuyến hỗ trợ */
-export type PaymentGateway = 'momo' | 'vnpay';
+export type PaymentGateway = 'paypal' | 'vnpay' | 'momo';
 
 /** Payload tạo yêu cầu thanh toán online */
 export interface CreatePaymentPayload {

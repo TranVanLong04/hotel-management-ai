@@ -10,10 +10,20 @@ export const createPaymentSchema = {
     booking_id: z
       .string({ required_error: 'booking_id là bắt buộc' })
       .uuid('booking_id phải là UUID hợp lệ'),
-    gateway: z.enum(['momo', 'vnpay'], {
+    gateway: z.enum(['paypal', 'vnpay', 'momo'], {
       required_error: 'Cổng thanh toán là bắt buộc',
-      invalid_type_error: 'Cổng thanh toán chỉ chấp nhận "momo" hoặc "vnpay"',
+      invalid_type_error: 'Cổng thanh toán chỉ chấp nhận "paypal", "vnpay" hoặc "momo"',
     }),
+  }),
+};
+
+// Schema capture thanh toán PayPal
+export const paypalCaptureSchema = {
+  body: z.object({
+    orderId: z
+      .string({ required_error: 'orderId (PayPal Token) là bắt buộc' })
+      .min(1, 'orderId không được rỗng'),
+    bookingId: z.string().uuid('bookingId phải là UUID hợp lệ').optional(),
   }),
 };
 
