@@ -7,22 +7,54 @@ import { Badge } from '@components/ui/Badge';
 import { Button } from '@components/ui/Button';
 import { formatCurrency } from '@utils/format';
 
+/**
+ * Ảnh mặc định chuẩn 5 sao khi phòng chưa có ảnh hoặc link ảnh bị lỗi
+ */
+export const DEFAULT_ROOM_IMAGE =
+  'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80';
+
 interface RoomCardProps {
   room: Room;
 }
 
 /**
- * Thẻ hiển thị tóm tắt thông tin phòng
- * - Hình ảnh phòng với xử lý fallback khi link hỏng/rỗng
- * - Badge số phòng và trạng thái
+ * Thẻ hiển thị tóm tắt thông tin phòng (Room Card)
+ * - Tự động trích xuất ảnh linh hoạt từ Room hoặc RoomType (image_url, imageUrl, image, thumbnail, images[])
+ * - Xử lý fallback đa tầng: Ảnh API -> Default Hotel Image -> Placeholder trang nhã
+ * - Tối ưu UI/UX: aspect-video, object-cover, hover zoom nhẹ mượt mà
+ * - Badge số phòng và trạng thái với contrast overlay
  * - Thông tin số khách, tầng, loại phòng và giá
  */
 export function RoomCard({ room }: RoomCardProps) {
   const [imageError, setImageError] = useState(false);
+  const [fallbackFailed, setFallbackFailed] = useState(false);
 
   const roomType = room.room_type || room.room_types;
-  const imageUrl = roomType?.image_url;
-  const hasImage = Boolean(imageUrl) && !imageError;
+
+  // Lấy đường dẫn ảnh từ nhiều trường dữ liệu khả dĩ (ở cả Room và RoomType)
+  const apiImageUrl =
+    room.image_url ||
+    room.imageUrl ||
+    room.image ||
+    room.thumbnail ||
+    (Array.isArray(room.images) && room.images.length > 0 ? room.images[0] : null) ||
+    roomType?.image_url ||
+    roomType?.imageUrl ||
+    roomType?.image ||
+    roomType?.thumbnail ||
+    (Array.isArray(roomType?.images) && roomType?.images.length > 0 ? roomType?.images[0] : null);
+
+  // Xác định nguồn ảnh hiện tại (ưu tiên API, fallback sang ảnh mặc định)
+  const currentImageSrc = imageError || !apiImageUrl ? DEFAULT_ROOM_IMAGE : apiImageUrl;
+
+  // Xử lý khi ảnh bị lỗi (chuyển sang ảnh default hoặc fallback placeholder)
+  const handleImageError = () => {
+    if (!imageError && apiImageUrl) {
+      setImageError(true);
+    } else {
+      setFallbackFailed(true);
+    }
+  };
 
   // Lấy màu sắc badge từ ROOM_STATUS_COLORS
   const statusColor = (ROOM_STATUS_COLORS[room.status] ?? 'default') as
@@ -37,24 +69,32 @@ export function RoomCard({ room }: RoomCardProps) {
     <div className="card group flex flex-col justify-between overflow-hidden p-0 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-card-hover">
       {/* Khối ảnh phòng với Badge số phòng & trạng thái */}
       <div className="relative aspect-video w-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900">
-        {hasImage ? (
+        {!fallbackFailed ? (
           <img
-            src={imageUrl ?? ''}
+            src={currentImageSrc}
             alt={roomType?.name ?? `Phòng ${room.room_number}`}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-            onError={() => setImageError(true)}
+            className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+            onError={handleImageError}
             loading="lazy"
           />
         ) : (
-          /* Placeholder khi không có ảnh hoặc ảnh lỗi */
-          <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-gray-400 dark:text-gray-600">
-            <BedDouble className="h-12 w-12" />
-            <span className="text-xs font-medium">Grand Luxury Hotel</span>
+          /* Placeholder dự phòng khi cả ảnh gốc và ảnh default không tải được */
+          <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-gray-100 p-4 text-center text-gray-400 dark:bg-gray-800 dark:text-gray-500">
+            <BedDouble className="h-12 w-12 text-gray-400 dark:text-gray-500" />
+            <span className="text-xs font-semibold tracking-wide text-gray-600 dark:text-gray-400">
+              Grand Luxury Hotel
+            </span>
+            <span className="text-[11px] text-gray-400 dark:text-gray-500">
+              Hình ảnh đang cập nhật
+            </span>
           </div>
         )}
 
+        {/* Lớp overlay gradient nhẹ để badge luôn dễ đọc trên nền ảnh */}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/25" />
+
         {/* Badge số phòng (Góc trên trái) */}
-        <div className="absolute top-3 left-3 rounded-xl bg-black/60 px-3 py-1 text-xs font-bold tracking-wide text-white backdrop-blur-md">
+        <div className="absolute top-3 left-3 rounded-xl bg-black/60 px-3 py-1 text-xs font-bold tracking-wide text-white backdrop-blur-md shadow-xs">
           Phòng {room.room_number}
         </div>
 
@@ -75,7 +115,7 @@ export function RoomCard({ room }: RoomCardProps) {
               {roomType?.name ?? 'Phòng tiêu chuẩn'}
             </span>
             <h3 className="font-display text-lg font-bold text-gray-900 transition-colors group-hover:text-primary-700 dark:text-white dark:group-hover:text-primary-400">
-              Phòng {room.room_number} — {roomType?.name}
+              Phòng {room.room_number} — {roomType?.name ?? 'Phòng tiêu chuẩn'}
             </h3>
           </div>
 

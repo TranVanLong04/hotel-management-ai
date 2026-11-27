@@ -81,6 +81,10 @@ export interface RoomType {
   base_price: number;
   amenities: string | null;
   image_url: string | null;
+  imageUrl?: string | null;
+  image?: string | null;
+  thumbnail?: string | null;
+  images?: string[];
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -94,6 +98,11 @@ export interface Room {
   floor: number | null;
   status: RoomStatus;
   description: string | null;
+  image_url?: string | null;
+  imageUrl?: string | null;
+  image?: string | null;
+  thumbnail?: string | null;
+  images?: string[];
   is_active: boolean;
   created_at: string;
   updated_at: string;

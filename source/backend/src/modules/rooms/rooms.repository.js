@@ -16,7 +16,7 @@ import { logger } from '../../config/logger.js';
 export const list = async ({ page = 1, limit = 20, status, room_type_id, floor, is_active, search }) => {
   let query = supabaseAdmin
     .from('rooms')
-    .select('*, room_types(id, name, base_price, max_guests)', { count: 'exact' });
+    .select('*, room_types(id, name, base_price, max_guests, description, amenities, image_url)', { count: 'exact' });
 
   // Filter trạng thái phòng
   if (status) {
@@ -117,7 +117,7 @@ export const insert = async (data) => {
   const { data: room, error } = await supabaseAdmin
     .from('rooms')
     .insert(data)
-    .select('*, room_types(id, name, base_price, max_guests)')
+    .select('*, room_types(id, name, base_price, max_guests, description, amenities, image_url)')
     .single();
 
   if (error) {
@@ -147,7 +147,7 @@ export const update = async (id, updates) => {
     .from('rooms')
     .update({ ...updates, updated_at: new Date().toISOString() })
     .eq('id', id)
-    .select('*, room_types(id, name, base_price, max_guests)')
+    .select('*, room_types(id, name, base_price, max_guests, description, amenities, image_url)')
     .single();
 
   if (error) {
@@ -177,7 +177,7 @@ export const updateStatus = async (id, status) => {
     .from('rooms')
     .update({ status, updated_at: new Date().toISOString() })
     .eq('id', id)
-    .select('*, room_types(id, name, base_price, max_guests)')
+    .select('*, room_types(id, name, base_price, max_guests, description, amenities, image_url)')
     .single();
 
   if (error) {
@@ -198,7 +198,7 @@ export const softDelete = async (id) => {
     .from('rooms')
     .update({ is_active: false, updated_at: new Date().toISOString() })
     .eq('id', id)
-    .select('*, room_types(id, name, base_price, max_guests)')
+    .select('*, room_types(id, name, base_price, max_guests, description, amenities, image_url)')
     .single();
 
   if (error) {

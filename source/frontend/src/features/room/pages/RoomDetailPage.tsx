@@ -20,6 +20,7 @@ import { Button } from '@components/ui/Button';
 import { Loading } from '@components/feedback/Loading';
 import { formatCurrency } from '@utils/format';
 import { PATHS } from '@routes/paths';
+import { DEFAULT_ROOM_IMAGE } from '../components/RoomCard';
 
 /**
  * Trang chi tiết phòng nghỉ
@@ -29,6 +30,7 @@ export function RoomDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [imageError, setImageError] = useState(false);
+  const [fallbackFailed, setFallbackFailed] = useState(false);
 
   const { data: room, loading, error, refetch } = useRoomDetail(id);
 
@@ -73,8 +75,28 @@ export function RoomDetailPage() {
 
   const roomType = room.room_type || room.room_types;
   const isAvailable = room.status === 'available';
-  const imageUrl = roomType?.image_url;
-  const hasImage = Boolean(imageUrl) && !imageError;
+
+  const apiImageUrl =
+    room.image_url ||
+    room.imageUrl ||
+    room.image ||
+    room.thumbnail ||
+    (Array.isArray(room.images) && room.images.length > 0 ? room.images[0] : null) ||
+    roomType?.image_url ||
+    roomType?.imageUrl ||
+    roomType?.image ||
+    roomType?.thumbnail ||
+    (Array.isArray(roomType?.images) && roomType?.images.length > 0 ? roomType?.images[0] : null);
+
+  const currentImageSrc = imageError || !apiImageUrl ? DEFAULT_ROOM_IMAGE : apiImageUrl;
+
+  const handleImageError = () => {
+    if (!imageError && apiImageUrl) {
+      setImageError(true);
+    } else {
+      setFallbackFailed(true);
+    }
+  };
 
   // Lấy màu sắc badge từ ROOM_STATUS_COLORS
   const statusColor = (ROOM_STATUS_COLORS[room.status] ?? 'default') as
@@ -88,17 +110,17 @@ export function RoomDetailPage() {
   // Tách danh sách tiện ích từ chuỗi (dấu phẩy hoặc xuống dòng)
   const amenitiesList = roomType?.amenities
     ? roomType.amenities
-        .split(/[,;\n]/)
-        .map((a) => a.trim())
-        .filter(Boolean)
+      .split(/[,;\n]/)
+      .map((a) => a.trim())
+      .filter(Boolean)
     : [
-        'Wi-Fi tốc độ cao miễn phí',
-        'Điều hòa 2 chiều thông minh',
-        'Smart TV 55 inch Ultra HD',
-        'Minibar & Máy pha cà phê cao cấp',
-        'Két sắt an toàn',
-        'Phòng tắm kính với áo choàng lụa',
-      ];
+      'Wi-Fi tốc độ cao miễn phí',
+      'Điều hòa 2 chiều thông minh',
+      'Smart TV 55 inch Ultra HD',
+      'Minibar & Máy pha cà phê cao cấp',
+      'Két sắt an toàn',
+      'Phòng tắm kính với áo choàng lụa',
+    ];
 
   // Xử lý chuyển hướng đến trang Booking
   const handleBooking = () => {
@@ -126,17 +148,18 @@ export function RoomDetailPage() {
         <div className="space-y-8 lg:col-span-2">
           {/* Khối Ảnh lớn */}
           <div className="relative aspect-[16/10] w-full overflow-hidden rounded-3xl bg-gradient-to-br from-gray-100 to-gray-200 shadow-card dark:from-gray-800 dark:to-gray-900">
-            {hasImage ? (
+            {!fallbackFailed ? (
               <img
-                src={imageUrl ?? ''}
+                src={currentImageSrc}
                 alt={roomType?.name ?? `Phòng ${room.room_number}`}
                 className="h-full w-full object-cover"
-                onError={() => setImageError(true)}
+                onError={handleImageError}
               />
             ) : (
               <div className="flex h-full w-full flex-col items-center justify-center gap-3 text-gray-400 dark:text-gray-600">
                 <BedDouble className="h-20 w-20" />
                 <span className="text-sm font-semibold">Grand Luxury Hotel</span>
+                <span className="text-xs text-gray-400 dark:text-gray-500">Hình ảnh đang cập nhật</span>
               </div>
             )}
 

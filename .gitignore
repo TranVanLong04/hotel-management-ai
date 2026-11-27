@@ -32,3 +32,10 @@ build/
 Thumbs.db
 
 !.~$UONG_2_PHUONG_PHAP_DE_XUAT_CAP_NHAT.docx
+
+diagram_assets/
+build_chapter4_docx.py
+CHUONG_3_PHAN_TICH_VA_THIET_KE_HE_THONG.docx
+CHUONG_4_XAY_DUNG_VA_THUC_NGHIEM_HE_THONG_CAP_NHAT.docx
+CHUONG_4_XAY_DUNG_VA_THUC_NGHIEM_HE_THONG.docx
+generate_diagrams_ch4.py

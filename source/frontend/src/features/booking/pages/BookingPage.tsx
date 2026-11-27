@@ -19,6 +19,7 @@ import { Loading } from '@components/feedback/Loading';
 import { formatCurrency } from '@utils/format';
 import { PATHS } from '@routes/paths';
 import { ROOM_STATUS_LABELS, ROOM_STATUS_COLORS } from '@/types';
+import { DEFAULT_ROOM_IMAGE } from '@/features/room/components/RoomCard';
 
 /**
  * Trang Đặt phòng (Booking Page)
@@ -27,6 +28,7 @@ import { ROOM_STATUS_LABELS, ROOM_STATUS_COLORS } from '@/types';
 export function BookingPage() {
   const { id: roomId } = useParams<{ id: string }>();
   const [imageError, setImageError] = useState(false);
+  const [fallbackFailed, setFallbackFailed] = useState(false);
 
   // Bổ sung 1: Fetch thông tin phòng bằng useRoomDetail từ Phase 4
   const { data: room, loading, error, refetch } = useRoomDetail(roomId);
@@ -72,8 +74,28 @@ export function BookingPage() {
 
   const roomType = room.room_type || room.room_types;
   const isAvailable = room.status === 'available';
-  const imageUrl = roomType?.image_url;
-  const hasImage = Boolean(imageUrl) && !imageError;
+
+  const apiImageUrl =
+    room.image_url ||
+    room.imageUrl ||
+    room.image ||
+    room.thumbnail ||
+    (Array.isArray(room.images) && room.images.length > 0 ? room.images[0] : null) ||
+    roomType?.image_url ||
+    roomType?.imageUrl ||
+    roomType?.image ||
+    roomType?.thumbnail ||
+    (Array.isArray(roomType?.images) && roomType?.images.length > 0 ? roomType?.images[0] : null);
+
+  const currentImageSrc = imageError || !apiImageUrl ? DEFAULT_ROOM_IMAGE : apiImageUrl;
+
+  const handleImageError = () => {
+    if (!imageError && apiImageUrl) {
+      setImageError(true);
+    } else {
+      setFallbackFailed(true);
+    }
+  };
 
   const statusColor = (ROOM_STATUS_COLORS[room.status] ?? 'default') as
     | 'default'
@@ -85,15 +107,15 @@ export function BookingPage() {
 
   const amenitiesList = roomType?.amenities
     ? roomType.amenities
-        .split(/[,;\n]/)
-        .map((a) => a.trim())
-        .filter(Boolean)
+      .split(/[,;\n]/)
+      .map((a) => a.trim())
+      .filter(Boolean)
     : [
-        'Wi-Fi tốc độ cao',
-        'Điều hòa thông minh',
-        'Smart TV Ultra HD',
-        'Minibar & Máy pha cà phê',
-      ];
+      'Wi-Fi tốc độ cao',
+      'Điều hòa thông minh',
+      'Smart TV Ultra HD',
+      'Minibar & Máy pha cà phê',
+    ];
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8 animate-fade-in">
@@ -139,17 +161,18 @@ export function BookingPage() {
             <Card className="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-card dark:border-gray-800 dark:bg-gray-850">
               {/* Ảnh phòng */}
               <div className="relative aspect-[16/10] w-full overflow-hidden bg-gray-100 dark:bg-gray-800">
-                {hasImage ? (
+                {!fallbackFailed ? (
                   <img
-                    src={imageUrl ?? ''}
+                    src={currentImageSrc}
                     alt={roomType?.name ?? `Phòng ${room.room_number}`}
                     className="h-full w-full object-cover"
-                    onError={() => setImageError(true)}
+                    onError={handleImageError}
                   />
                 ) : (
                   <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-gray-400 dark:text-gray-600">
                     <BedDouble className="h-12 w-12" />
                     <span className="text-xs font-semibold">Grand Luxury Hotel</span>
+                    <span className="text-[11px] text-gray-400">Hình ảnh đang cập nhật</span>
                   </div>
                 )}
                 <div className="absolute top-3 left-3">
